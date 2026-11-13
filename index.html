@@ -19,6 +19,7 @@
     --ink:#2B473C;
     --ink-soft:#70897D;
     --peach:#F2BE9E;
+    --danger:#B4534B;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;}
@@ -68,10 +69,7 @@
   }
   .date-main{font-size:32px;font-weight:800;line-height:1;letter-spacing:1px;}
   .date-sub{font-size:12px;color:var(--ink-soft);letter-spacing:1px;padding-bottom:4px;}
-  .date-deco{
-    position:absolute;right:16px;top:14px;
-    display:flex;gap:4px;
-  }
+  .date-deco{position:absolute;right:16px;top:14px;display:flex;gap:4px;}
   .date-deco i{display:block;width:6px;height:6px;background:var(--mint);}
   .date-deco i:nth-child(2){background:var(--peach);}
   .date-deco i:nth-child(3){background:var(--cream-deep);}
@@ -88,7 +86,7 @@
   .today-label{font-size:14px;font-weight:800;letter-spacing:1px;white-space:nowrap;}
   .today-label b{font-size:18px;}
   .today-label .total{font-size:13px;color:var(--mint-deep);}
-  .cells{display:flex;gap:5px;}
+  .cells{display:flex;gap:5px;flex-wrap:wrap;}
   .cell{
     width:13px;height:13px;
     border:2px solid var(--ink);
@@ -98,12 +96,26 @@
   .cell.on{background:var(--mint-deep);}
 
   /* ---------- 习惯列表 ---------- */
+  .section-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin:0 0 12px 2px;
+  }
   .section-label{
     font-size:11px;letter-spacing:4px;color:var(--ink-soft);
-    font-weight:700;margin:0 0 12px 2px;
+    font-weight:700;margin:0;
   }
+  .add-btn{
+    font:inherit;font-size:12px;font-weight:800;letter-spacing:1px;
+    color:var(--ink);background:var(--mint);
+    border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);
+    padding:6px 10px;cursor:pointer;
+    -webkit-appearance:none;appearance:none;
+    transition:transform .07s ease,box-shadow .07s ease;
+  }
+  .add-btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink);}
+
   .habit{
-    display:flex;align-items:center;gap:12px;
+    display:flex;align-items:center;gap:10px;
     width:100%;
     background:var(--white);
     border:3px solid var(--ink);
@@ -113,7 +125,6 @@
     font:inherit;color:inherit;text-align:left;
     cursor:pointer;
     -webkit-user-select:none;user-select:none;
-    -webkit-appearance:none;appearance:none;
     transition:transform .07s ease, box-shadow .07s ease, background-color .18s;
   }
   .habit:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink);}
@@ -127,10 +138,18 @@
   }
   .habit-icon svg{width:22px;height:22px;fill:currentColor;display:block;}
   .habit-text{flex:1;min-width:0;}
-  .habit-name{display:block;font-size:17px;font-weight:700;letter-spacing:.5px;line-height:1.35;}
+  .habit-name{display:block;font-size:17px;font-weight:700;letter-spacing:.5px;line-height:1.35;word-break:break-all;}
   .habit-streak{display:block;font-size:12px;color:var(--ink-soft);letter-spacing:.5px;margin-top:4px;}
   .habit.done .habit-name,
   .habit.done .habit-streak{color:var(--mint-deep);}
+  .habit-edit{
+    flex:0 0 auto;width:30px;height:30px;
+    border:2px solid var(--ink);background:var(--cream);
+    display:grid;place-items:center;cursor:pointer;
+    padding:0;color:var(--ink-soft);
+    -webkit-appearance:none;appearance:none;
+  }
+  .habit-edit svg{width:14px;height:14px;fill:currentColor;}
   .check{
     flex:0 0 auto;width:34px;height:34px;
     border:3px solid var(--ink);
@@ -148,6 +167,113 @@
   }
   .check.tick{animation:tick .3s steps(4,end);}
 
+  .empty{
+    border:2px dashed var(--ink-soft);
+    padding:22px 16px;
+    text-align:center;
+    font-size:13px;
+    color:var(--ink-soft);
+    line-height:1.8;
+    margin-bottom:14px;
+  }
+
+  /* ---------- 弹层 ---------- */
+  .mask{
+    position:fixed;inset:0;z-index:20;
+    background:rgba(43,71,60,.45);
+    opacity:0;pointer-events:none;
+    transition:opacity .2s;
+  }
+  .mask.show{opacity:1;pointer-events:auto;}
+  .sheet{
+    position:fixed;left:0;right:0;bottom:0;z-index:21;
+    background:var(--cream);
+    border-top:3px solid var(--ink);
+    padding:18px 18px calc(22px + env(safe-area-inset-bottom));
+    transform:translateY(110%);
+    transition:transform .25s ease;
+    max-height:90vh;
+    overflow-y:auto;
+  }
+  .sheet.show{transform:translateY(0);}
+  @media (min-width:540px){
+    .sheet{
+      left:50%;right:auto;width:460px;
+      transform:translate(-50%,110%);
+      border-left:3px solid var(--ink);
+      border-right:3px solid var(--ink);
+      box-shadow:6px 0 0 var(--ink);
+    }
+    .sheet.show{transform:translate(-50%,0);}
+  }
+  .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .sheet-title{font-size:16px;font-weight:800;letter-spacing:2px;}
+  .sheet-close{
+    width:32px;height:32px;padding:0;
+    border:2px solid var(--ink);background:var(--white);
+    font:inherit;font-size:15px;font-weight:800;color:var(--ink);
+    cursor:pointer;-webkit-appearance:none;appearance:none;
+  }
+  .field-label{
+    display:block;font-size:12px;font-weight:700;color:var(--ink-soft);
+    letter-spacing:1px;margin:16px 0 8px;
+  }
+  .field-input{
+    width:100%;font:inherit;font-size:16px;padding:10px 12px;
+    border:3px solid var(--ink);background:var(--white);color:var(--ink);
+    box-shadow:3px 3px 0 var(--ink);outline:none;border-radius:0;
+    -webkit-appearance:none;appearance:none;
+  }
+  .field-input::placeholder{color:#B7C5BC;}
+  .icon-row{display:flex;flex-wrap:wrap;gap:8px;}
+  .icon-btn{
+    width:42px;height:42px;padding:0;
+    border:2px solid var(--ink);background:var(--white);
+    display:grid;place-items:center;color:var(--ink-soft);
+    cursor:pointer;-webkit-appearance:none;appearance:none;
+    transition:background-color .12s;
+  }
+  .icon-btn svg{width:22px;height:22px;fill:currentColor;display:block;}
+  .icon-btn.on{background:var(--mint-soft);color:var(--mint-deep);border-color:var(--mint-deep);}
+  .freq-row{display:flex;gap:8px;}
+  .freq-btn{
+    flex:1;padding:10px;
+    border:3px solid var(--ink);background:var(--white);
+    font:inherit;font-size:15px;font-weight:700;color:var(--ink);
+    box-shadow:3px 3px 0 var(--ink);cursor:pointer;
+    -webkit-appearance:none;appearance:none;
+    transition:background-color .12s;
+  }
+  .freq-btn.on{background:var(--mint-soft);border-color:var(--mint-deep);color:var(--mint-deep);}
+  .times-row{
+    display:flex;align-items:center;justify-content:center;gap:14px;
+    margin-top:14px;font-size:15px;font-weight:700;
+  }
+  .times-btn{
+    width:40px;height:40px;padding:0;
+    border:2px solid var(--ink);background:var(--white);
+    font:inherit;font-size:19px;font-weight:800;color:var(--ink);
+    cursor:pointer;-webkit-appearance:none;appearance:none;
+  }
+  .times-num{font-size:22px;font-weight:800;min-width:28px;text-align:center;color:var(--mint-deep);}
+  .sheet-actions{display:flex;gap:10px;margin-top:24px;}
+  .btn-primary{
+    flex:1;padding:14px;
+    border:3px solid var(--ink);background:var(--mint-deep);color:var(--white);
+    box-shadow:4px 4px 0 var(--ink);
+    font:inherit;font-size:16px;font-weight:800;letter-spacing:3px;
+    cursor:pointer;-webkit-appearance:none;appearance:none;
+    transition:transform .07s ease,box-shadow .07s ease;
+  }
+  .btn-primary:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink);}
+  .btn-danger{
+    padding:14px 16px;
+    border:3px solid var(--ink);background:var(--white);color:var(--danger);
+    box-shadow:4px 4px 0 var(--ink);
+    font:inherit;font-size:14px;font-weight:700;
+    cursor:pointer;-webkit-appearance:none;appearance:none;
+  }
+
   /* ---------- 底部 ---------- */
   .tip{
     margin:26px 0 0;
@@ -159,6 +285,7 @@
   }
   @media (prefers-reduced-motion: reduce){
     .check.tick{animation:none;}
+    .sheet{transition:none;}
   }
 </style>
 </head>
@@ -194,10 +321,45 @@
     <div class="cells" id="cells"></div>
   </section>
 
-  <p class="section-label">我 的 习 惯</p>
+  <div class="section-head">
+    <p class="section-label">我 的 习 惯</p>
+    <button class="add-btn" id="addBtn" type="button">＋ 新增</button>
+  </div>
   <main id="habitList"></main>
 
   <p class="tip">数据只存在这台设备里<br>清了缓存就找不回来了</p>
+</div>
+
+<div class="mask" id="mask"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet-head">
+    <span class="sheet-title" id="sheetTitle">新习惯</span>
+    <button class="sheet-close" id="sheetClose" type="button" aria-label="关闭">✕</button>
+  </div>
+
+  <label class="field-label" for="nameInput">叫什么</label>
+  <input class="field-input" id="nameInput" type="text" maxlength="12" placeholder="比如：背单词、跑步、早睡">
+
+  <label class="field-label">挑个图标</label>
+  <div class="icon-row" id="iconRow"></div>
+
+  <label class="field-label">多久一次</label>
+  <div class="freq-row">
+    <button class="freq-btn" id="freqDaily" type="button" data-freq="daily">每天</button>
+    <button class="freq-btn" id="freqWeekly" type="button" data-freq="weekly">每周</button>
+  </div>
+  <div class="times-row" id="timesRow" hidden>
+    <span>每周</span>
+    <button class="times-btn" id="minusTimes" type="button" aria-label="减少">−</button>
+    <span class="times-num" id="timesNum">3</span>
+    <span>次</span>
+    <button class="times-btn" id="plusTimes" type="button" aria-label="增加">＋</button>
+  </div>
+
+  <div class="sheet-actions">
+    <button class="btn-danger" id="deleteHabit" type="button" hidden>删除</button>
+    <button class="btn-primary" id="saveHabit" type="button">保存</button>
+  </div>
 </div>
 
 <script>
@@ -211,8 +373,16 @@
     book: '<svg viewBox="0 0 8 8" shape-rendering="crispEdges"><rect x="1" y="1" width="6" height="1"/><rect x="1" y="2" width="1" height="5"/><rect x="6" y="2" width="1" height="5"/><rect x="1" y="6" width="6" height="1"/><rect x="3" y="2" width="1" height="3"/><rect x="4" y="2" width="1" height="3"/></svg>',
     dumbbell: '<svg viewBox="0 0 8 8" shape-rendering="crispEdges"><rect x="0" y="2" width="2" height="4"/><rect x="6" y="2" width="2" height="4"/><rect x="2" y="3" width="4" height="2"/></svg>',
     moon: '<svg viewBox="0 0 8 8" shape-rendering="crispEdges"><rect x="2" y="0" width="4" height="1"/><rect x="1" y="1" width="2" height="1"/><rect x="0" y="2" width="2" height="4"/><rect x="1" y="6" width="2" height="1"/><rect x="2" y="7" width="4" height="1"/></svg>',
-    drop: '<svg viewBox="0 0 8 8" shape-rendering="crispEdges"><rect x="3" y="0" width="2" height="2"/><rect x="2" y="2" width="4" height="2"/><rect x="1" y="4" width="6" height="3"/><rect x="2" y="7" width="4" height="1"/></svg>'
+    drop: '<svg viewBox="0 0 8 8" shape-rendering="crispEdges"><rect x="3" y="0" width="2" height="2"/><rect x="2" y="2" width="4" height="2"/><rect x="1" y="4" width="6" height="3"/><rect x="2" y="7" width="4" height="1"/></svg>',
+    pen: '<svg viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M5 0h3v3L3 8H0V5z"/></svg>',
+    sun: '<svg viewBox="0 0 8 8" shape-rendering="crispEdges"><rect x="2" y="2" width="4" height="4"/><rect x="3" y="0" width="2" height="1"/><rect x="3" y="7" width="2" height="1"/><rect x="0" y="3" width="1" height="2"/><rect x="7" y="3" width="1" height="2"/><rect x="1" y="1" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="1" y="6" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/></svg>',
+    heart: '<svg viewBox="0 0 8 8" shape-rendering="crispEdges"><rect x="1" y="1" width="2" height="2"/><rect x="5" y="1" width="2" height="2"/><rect x="1" y="3" width="6" height="2"/><rect x="2" y="5" width="4" height="1"/><rect x="3" y="6" width="2" height="1"/></svg>',
+    star: '<svg viewBox="0 0 8 8" shape-rendering="crispEdges"><rect x="3" y="0" width="2" height="8"/><rect x="0" y="3" width="8" height="2"/></svg>'
   };
+  var ICON_KEYS = ['book','dumbbell','moon','drop','pen','sun','heart','star'];
+
+  var EDIT_ICON = '<svg viewBox="0 0 10 10" shape-rendering="crispEdges"><rect x="1" y="4" width="2" height="2"/><rect x="4" y="4" width="2" height="2"/><rect x="7" y="4" width="2" height="2"/></svg>';
+  var TICK_ICON = '<svg viewBox="0 0 10 10"><path d="M1.5 5.2 L4 7.6 L8.6 2.6" fill="none" stroke="#FFFDF7" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter"/></svg>';
 
   /* ---------- 日期小工具 ---------- */
   function pad(n){ return n < 10 ? '0' + n : '' + n; }
@@ -223,14 +393,19 @@
     x.setDate(x.getDate() + n);
     return x;
   }
+  function startOfWeek(d){
+    var x = startOfDay(d);
+    var offset = (x.getDay() + 6) % 7; /* 周一算一周开头 */
+    return addDays(x, -offset);
+  }
 
   /* ---------- 数据 ---------- */
   function defaultState(){
     return {
       habits: [
-        { id:'h_word', name:'背单词',      icon:'book',     done:{} },
-        { id:'h_move', name:'运动 20 分钟', icon:'dumbbell', done:{} },
-        { id:'h_read', name:'睡前读书',    icon:'moon',     done:{} }
+        { id:'h_word', name:'背单词',       icon:'book',     freq:{type:'daily'}, done:{} },
+        { id:'h_move', name:'运动 20 分钟', icon:'dumbbell', freq:{type:'daily'}, done:{} },
+        { id:'h_read', name:'睡前读书',     icon:'moon',     freq:{type:'daily'}, done:{} }
       ]
     };
   }
@@ -238,16 +413,30 @@
   var state = null;
   try {
     var raw = localStorage.getItem(STORAGE_KEY);
-    state = raw ? JSON.parse(raw) : null;
+    if (raw) state = JSON.parse(raw);
   } catch (e) {
     state = null;
   }
-  if (!state || !Array.isArray(state.habits) || state.habits.length === 0) {
-    state = defaultState();
+  if (!state || !Array.isArray(state.habits)) state = defaultState();
+
+  /* 老数据补字段 */
+  for (var mi = 0; mi < state.habits.length; mi++) {
+    var mh = state.habits[mi];
+    if (!mh.done || typeof mh.done !== 'object') mh.done = {};
+    if (!mh.freq || !mh.freq.type) mh.freq = { type:'daily' };
+    if (mh.freq.type === 'weekly') {
+      var t = parseInt(mh.freq.times, 10);
+      mh.freq.times = isNaN(t) ? 3 : Math.max(1, Math.min(7, t));
+    }
+    if (!ICONS[mh.icon]) mh.icon = 'book';
   }
 
   function save(){
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function genId(){
+    return 'h' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
   }
 
   /* ---------- 元素 ---------- */
@@ -258,6 +447,22 @@
   var elCells    = document.getElementById('cells');
   var elDone     = document.getElementById('doneCount');
   var elTotal    = document.getElementById('totalCount');
+  var elAddBtn   = document.getElementById('addBtn');
+
+  var elMask     = document.getElementById('mask');
+  var elSheet    = document.getElementById('sheet');
+  var elSheetTitle = document.getElementById('sheetTitle');
+  var elSheetClose = document.getElementById('sheetClose');
+  var elNameInput  = document.getElementById('nameInput');
+  var elIconRow    = document.getElementById('iconRow');
+  var elFreqDaily  = document.getElementById('freqDaily');
+  var elFreqWeekly = document.getElementById('freqWeekly');
+  var elTimesRow   = document.getElementById('timesRow');
+  var elTimesNum   = document.getElementById('timesNum');
+  var elMinusTimes = document.getElementById('minusTimes');
+  var elPlusTimes  = document.getElementById('plusTimes');
+  var elSaveHabit  = document.getElementById('saveHabit');
+  var elDeleteHabit = document.getElementById('deleteHabit');
 
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, function(c){
@@ -267,7 +472,7 @@
 
   function isDone(h, key){ return !!(h.done && h.done[key]); }
 
-  /* 连续天数：今天没打就从昨天往前数 */
+  /* ---------- 连续天数 / 每周进度 ---------- */
   function streakOf(h){
     var cursor = startOfDay(today);
     if (!isDone(h, dayKey(cursor))) cursor = addDays(cursor, -1);
@@ -280,13 +485,43 @@
     return n;
   }
 
-  function streakText(h){
-    var done = isDone(h, dayKey(today));
-    var s = streakOf(h);
-    if (s > 0) return '连续 ' + s + ' 天' + (done ? '' : ' · 今天还没打');
+  function weekDoneCount(h, weekStart){
+    var n = 0;
+    for (var i = 0; i < 7; i++) {
+      if (isDone(h, dayKey(addDays(weekStart, i)))) n++;
+    }
+    return n;
+  }
+
+  function weekStreak(h){
+    var goal = h.freq.times;
+    var ws = startOfWeek(today);
+    if (weekDoneCount(h, ws) < goal) ws = addDays(ws, -7);
+    var n = 0;
+    while (weekDoneCount(h, ws) >= goal) {
+      n++;
+      ws = addDays(ws, -7);
+      if (n > 520) break;
+    }
+    return n;
+  }
+
+  function metaText(h){
+    if (h.freq.type === 'weekly') {
+      var goal = h.freq.times;
+      var n = weekDoneCount(h, startOfWeek(today));
+      var txt = '本周 ' + n + '/' + goal + (n >= goal ? ' 达标' : '');
+      var s = weekStreak(h);
+      if (s > 0) txt += ' · 连续 ' + s + ' 周';
+      return txt;
+    }
+    var doneToday = isDone(h, dayKey(today));
+    var streak = streakOf(h);
+    if (streak > 0) return '连续 ' + streak + ' 天' + (doneToday ? '' : ' · 今天还没打');
     return '今天还没动';
   }
 
+  /* ---------- 渲染 ---------- */
   function renderDate(){
     elDateMain.textContent = (today.getMonth()+1) + '月' + today.getDate() + '日';
     elDateSub.textContent = today.getFullYear() + ' · ' + WEEKDAYS[today.getDay()];
@@ -294,21 +529,23 @@
 
   function renderHabits(){
     var html = '';
+    if (!state.habits.length) {
+      html = '<div class="empty">还没有习惯<br>点上面那个「＋ 新增」加一个</div>';
+    }
     for (var i = 0; i < state.habits.length; i++) {
       var h = state.habits[i];
       var done = isDone(h, dayKey(today));
-      html += '<button class="habit' + (done ? ' done' : '') + '" type="button"'
+      html += '<div class="habit' + (done ? ' done' : '') + '" role="button" tabindex="0"'
             + ' data-id="' + escapeHtml(h.id) + '"'
             + ' aria-pressed="' + (done ? 'true' : 'false') + '">'
             + '<span class="habit-icon">' + (ICONS[h.icon] || ICONS.book) + '</span>'
             + '<span class="habit-text">'
             +   '<span class="habit-name">' + escapeHtml(h.name) + '</span>'
-            +   '<span class="habit-streak">' + escapeHtml(streakText(h)) + '</span>'
+            +   '<span class="habit-streak">' + escapeHtml(metaText(h)) + '</span>'
             + '</span>'
-            + '<span class="check">'
-            +   '<svg viewBox="0 0 10 10"><path d="M1.5 5.2 L4 7.6 L8.6 2.6" fill="none" stroke="#FFFDF7" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter"/></svg>'
-            + '</span>'
-            + '</button>';
+            + '<button class="habit-edit" type="button" aria-label="修改这个习惯">' + EDIT_ICON + '</button>'
+            + '<span class="check">' + TICK_ICON + '</span>'
+            + '</div>';
     }
     elList.innerHTML = html;
   }
@@ -346,40 +583,179 @@
     return false;
   }
 
-  elList.addEventListener('click', function(e){
-    var target = e.target;
-    var btn = target && target.closest ? target.closest('.habit') : null;
-    if (!btn) return;
-    if (dayRolled()) return;
+  function refreshCard(card, h){
+    var done = isDone(h, dayKey(today));
+    card.classList.toggle('done', done);
+    card.setAttribute('aria-pressed', done ? 'true' : 'false');
+    var streakEl = card.querySelector('.habit-streak');
+    if (streakEl) streakEl.textContent = metaText(h);
+  }
 
-    var h = findHabit(btn.getAttribute('data-id'));
+  /* ---------- 打卡 ---------- */
+  function toggleHabit(card){
+    if (dayRolled()) return;
+    var h = findHabit(card.getAttribute('data-id'));
     if (!h) return;
 
     var key = dayKey(today);
     var nowDone = !isDone(h, key);
-
     if (nowDone) h.done[key] = true;
     else delete h.done[key];
     save();
 
-    btn.classList.toggle('done', nowDone);
-    btn.setAttribute('aria-pressed', nowDone ? 'true' : 'false');
-
-    var streakEl = btn.querySelector('.habit-streak');
-    if (streakEl) streakEl.textContent = streakText(h);
-
+    refreshCard(card, h);
     if (nowDone) {
-      var check = btn.querySelector('.check');
+      var check = card.querySelector('.check');
       if (check) {
         check.classList.remove('tick');
         void check.offsetWidth;
         check.classList.add('tick');
       }
     }
-
     renderToday();
+  }
+
+  elList.addEventListener('click', function(e){
+    var editBtn = e.target.closest ? e.target.closest('.habit-edit') : null;
+    if (editBtn) {
+      var card = editBtn.closest('.habit');
+      var h = card ? findHabit(card.getAttribute('data-id')) : null;
+      if (h) openSheet(h);
+      return;
+    }
+    var card2 = e.target.closest ? e.target.closest('.habit') : null;
+    if (!card2) return;
+    toggleHabit(card2);
   });
 
+  elList.addEventListener('keydown', function(e){
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var card = e.target.closest ? e.target.closest('.habit') : null;
+    if (!card) return;
+    e.preventDefault();
+    toggleHabit(card);
+  });
+
+  /* ---------- 弹层：新增 / 修改 ---------- */
+  var editingId = null;
+  var formIcon = 'book';
+  var formFreq = 'daily';
+  var formTimes = 3;
+
+  function renderIconRow(){
+    var html = '';
+    for (var i = 0; i < ICON_KEYS.length; i++) {
+      var k = ICON_KEYS[i];
+      html += '<button class="icon-btn' + (k === formIcon ? ' on' : '') + '" type="button"'
+            + ' data-icon="' + k + '" aria-label="图标 ' + k + '">' + ICONS[k] + '</button>';
+    }
+    elIconRow.innerHTML = html;
+  }
+
+  function renderFreqUI(){
+    elFreqDaily.classList.toggle('on', formFreq === 'daily');
+    elFreqWeekly.classList.toggle('on', formFreq === 'weekly');
+    elTimesRow.hidden = formFreq !== 'weekly';
+    elTimesNum.textContent = formTimes;
+  }
+
+  function openSheet(h){
+    editingId = h ? h.id : null;
+    formIcon = h ? (ICONS[h.icon] ? h.icon : 'book') : 'book';
+    formFreq = h && h.freq.type === 'weekly' ? 'weekly' : 'daily';
+    formTimes = h && h.freq.type === 'weekly' ? h.freq.times : 3;
+
+    elSheetTitle.textContent = h ? '改习惯' : '新习惯';
+    elNameInput.value = h ? h.name : '';
+    elDeleteHabit.hidden = !h;
+    renderIconRow();
+    renderFreqUI();
+
+    elMask.classList.add('show');
+    elSheet.classList.add('show');
+  }
+
+  function closeSheet(){
+    elMask.classList.remove('show');
+    elSheet.classList.remove('show');
+    editingId = null;
+  }
+
+  elAddBtn.addEventListener('click', function(){ openSheet(null); });
+  elSheetClose.addEventListener('click', closeSheet);
+  elMask.addEventListener('click', closeSheet);
+
+  elIconRow.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('.icon-btn') : null;
+    if (!b) return;
+    formIcon = b.getAttribute('data-icon');
+    renderIconRow();
+  });
+
+  elFreqDaily.addEventListener('click', function(){ formFreq = 'daily'; renderFreqUI(); });
+  elFreqWeekly.addEventListener('click', function(){
+    formFreq = 'weekly';
+    if (formTimes < 1) formTimes = 3;
+    renderFreqUI();
+  });
+  elMinusTimes.addEventListener('click', function(){
+    formTimes = Math.max(1, formTimes - 1);
+    elTimesNum.textContent = formTimes;
+  });
+  elPlusTimes.addEventListener('click', function(){
+    formTimes = Math.min(7, formTimes + 1);
+    elTimesNum.textContent = formTimes;
+  });
+
+  elSaveHabit.addEventListener('click', function(){
+    var name = elNameInput.value.trim();
+    if (!name) {
+      elNameInput.focus();
+      elNameInput.style.borderColor = 'var(--danger)';
+      setTimeout(function(){ elNameInput.style.borderColor = ''; }, 1200);
+      return;
+    }
+    var freq = formFreq === 'weekly'
+      ? { type:'weekly', times: formTimes }
+      : { type:'daily' };
+
+    if (editingId) {
+      var h = findHabit(editingId);
+      if (h) {
+        h.name = name;
+        h.icon = formIcon;
+        h.freq = freq;
+      }
+    } else {
+      state.habits.push({
+        id: genId(),
+        name: name,
+        icon: formIcon,
+        freq: freq,
+        done: {}
+      });
+    }
+    save();
+    renderHabits();
+    renderToday();
+    closeSheet();
+  });
+
+  elDeleteHabit.addEventListener('click', function(){
+    if (!editingId) return;
+    if (!window.confirm('删掉这个习惯？它之前打的卡也会一起没。')) return;
+    var next = [];
+    for (var i = 0; i < state.habits.length; i++) {
+      if (state.habits[i].id !== editingId) next.push(state.habits[i]);
+    }
+    state.habits = next;
+    save();
+    renderHabits();
+    renderToday();
+    closeSheet();
+  });
+
+  /* ---------- 启动 ---------- */
   renderDate();
   renderHabits();
   renderToday();
