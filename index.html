@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBF6EA">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="像素习惯">
+<title>像素习惯</title>
+<style>
+  :root{
+    --cream:#FBF6EA;
+    --cream-deep:#F0E6CF;
+    --white:#FFFDF7;
+    --mint:#A7E4C6;
+    --mint-soft:#DDF5E9;
+    --mint-deep:#3D8B72;
+    --ink:#2B473C;
+    --ink-soft:#70897D;
+    --peach:#F2BE9E;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    background-color:var(--cream);
+    background-image:
+      linear-gradient(rgba(61,139,114,.055) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(61,139,114,.055) 1px,transparent 1px);
+    background-size:16px 16px;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  .app{
+    max-width:460px;
+    margin:0 auto;
+    padding:24px 18px calc(32px + env(safe-area-inset-bottom));
+  }
+
+  /* ---------- 顶部 ---------- */
+  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+  .brand{display:flex;align-items:center;gap:11px;}
+  .brand-mark{
+    width:38px;height:38px;flex:0 0 auto;
+    background:var(--mint);
+    border:3px solid var(--ink);
+    box-shadow:3px 3px 0 var(--ink);
+    display:grid;place-items:center;
+  }
+  .brand-mark svg{width:20px;height:20px;display:block;}
+  h1{margin:0;font-size:19px;letter-spacing:3px;font-weight:800;}
+  .tagline{margin:4px 0 0;font-size:11px;color:var(--ink-soft);letter-spacing:1px;}
+
+  /* ---------- 日期卡 ---------- */
+  .date-card{
+    position:relative;
+    background:var(--white);
+    border:3px solid var(--ink);
+    box-shadow:5px 5px 0 var(--ink);
+    padding:16px 18px;
+    margin-bottom:16px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .date-main{font-size:32px;font-weight:800;line-height:1;letter-spacing:1px;}
+  .date-sub{font-size:12px;color:var(--ink-soft);letter-spacing:1px;padding-bottom:4px;}
+  .date-deco{
+    position:absolute;right:16px;top:14px;
+    display:flex;gap:4px;
+  }
+  .date-deco i{display:block;width:6px;height:6px;background:var(--mint);}
+  .date-deco i:nth-child(2){background:var(--peach);}
+  .date-deco i:nth-child(3){background:var(--cream-deep);}
+
+  /* ---------- 今日进度 ---------- */
+  .today-bar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--mint-soft);
+    border:3px solid var(--ink);
+    box-shadow:5px 5px 0 var(--ink);
+    padding:11px 14px;
+    margin-bottom:24px;
+  }
+  .today-label{font-size:14px;font-weight:800;letter-spacing:1px;white-space:nowrap;}
+  .today-label b{font-size:18px;}
+  .today-label .total{font-size:13px;color:var(--mint-deep);}
+  .cells{display:flex;gap:5px;}
+  .cell{
+    width:13px;height:13px;
+    border:2px solid var(--ink);
+    background:var(--white);
+    transition:background-color .18s;
+  }
+  .cell.on{background:var(--mint-deep);}
+
+  /* ---------- 习惯列表 ---------- */
+  .section-label{
+    font-size:11px;letter-spacing:4px;color:var(--ink-soft);
+    font-weight:700;margin:0 0 12px 2px;
+  }
+  .habit{
+    display:flex;align-items:center;gap:12px;
+    width:100%;
+    background:var(--white);
+    border:3px solid var(--ink);
+    box-shadow:4px 4px 0 var(--ink);
+    padding:13px 14px;
+    margin:0 0 14px;
+    font:inherit;color:inherit;text-align:left;
+    cursor:pointer;
+    -webkit-user-select:none;user-select:none;
+    -webkit-appearance:none;appearance:none;
+    transition:transform .07s ease, box-shadow .07s ease, background-color .18s;
+  }
+  .habit:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink);}
+  .habit.done{background:var(--mint-soft);}
+  .habit-icon{
+    flex:0 0 auto;width:36px;height:36px;
+    display:grid;place-items:center;
+    border:2px solid var(--ink);
+    background:var(--cream);
+    color:var(--mint-deep);
+  }
+  .habit-icon svg{width:22px;height:22px;fill:currentColor;display:block;}
+  .habit-text{flex:1;min-width:0;}
+  .habit-name{display:block;font-size:17px;font-weight:700;letter-spacing:.5px;line-height:1.35;}
+  .habit-streak{display:block;font-size:12px;color:var(--ink-soft);letter-spacing:.5px;margin-top:4px;}
+  .habit.done .habit-name,
+  .habit.done .habit-streak{color:var(--mint-deep);}
+  .check{
+    flex:0 0 auto;width:34px;height:34px;
+    border:3px solid var(--ink);
+    background:var(--white);
+    display:grid;place-items:center;
+    transition:background-color .15s,border-color .15s;
+  }
+  .check svg{width:20px;height:20px;display:none;}
+  .habit.done .check{background:var(--mint-deep);border-color:var(--mint-deep);}
+  .habit.done .check svg{display:block;}
+  @keyframes tick{
+    0%{transform:scale(.7);}
+    60%{transform:scale(1.12);}
+    100%{transform:scale(1);}
+  }
+  .check.tick{animation:tick .3s steps(4,end);}
+
+  /* ---------- 底部 ---------- */
+  .tip{
+    margin:26px 0 0;
+    text-align:center;
+    font-size:11px;
+    line-height:2;
+    color:var(--ink-soft);
+    letter-spacing:.5px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .check.tick{animation:none;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 8 8" shape-rendering="crispEdges" fill="#2B473C">
+          <rect x="1" y="1" width="2" height="2"/>
+          <rect x="5" y="1" width="2" height="2"/>
+          <rect x="3" y="3" width="2" height="2"/>
+          <rect x="1" y="5" width="2" height="2"/>
+          <rect x="5" y="5" width="2" height="2"/>
+        </svg>
+      </span>
+      <div>
+        <h1>像素习惯</h1>
+        <p class="tagline">一天一个小方块</p>
+      </div>
+    </div>
+  </header>
+
+  <section class="date-card" aria-label="今天的日期">
+    <div class="date-main" id="dateMain">--</div>
+    <div class="date-sub" id="dateSub"></div>
+    <div class="date-deco" aria-hidden="true"><i></i><i></i><i></i></div>
+  </section>
+
+  <section class="today-bar" aria-label="今日完成进度">
+    <span class="today-label">今日 <b id="doneCount">0</b><span class="total" id="totalCount">/0</span></span>
+    <div class="cells" id="cells"></div>
+  </section>
+
+  <p class="section-label">我 的 习 惯</p>
+  <main id="habitList"></main>
+
+  <p class="tip">数据只存在这台设备里<br>清了缓存就找不回来了</p>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var STORAGE_KEY = 'pixel-habits-v1';
+  var WEEKDAYS = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+
+  var ICONS = {
+    book: '<svg viewBox="0 0 8 8" shape-rendering="crispEdges"><rect x="1" y="1" width="6" height="1"/><rect x="1" y="2" width="1" height="5"/><rect x="6" y="2" width="1" height="5"/><rect x="1" y="6" width="6" height="1"/><rect x="3" y="2" width="1" height="3"/><rect x="4" y="2" width="1" height="3"/></svg>',
+    dumbbell: '<svg viewBox="0 0 8 8" shape-rendering="crispEdges"><rect x="0" y="2" width="2" height="4"/><rect x="6" y="2" width="2" height="4"/><rect x="2" y="3" width="4" height="2"/></svg>',
+    moon: '<svg viewBox="0 0 8 8" shape-rendering="crispEdges"><rect x="2" y="0" width="4" height="1"/><rect x="1" y="1" width="2" height="1"/><rect x="0" y="2" width="2" height="4"/><rect x="1" y="6" width="2" height="1"/><rect x="2" y="7" width="4" height="1"/></svg>',
+    drop: '<svg viewBox="0 0 8 8" shape-rendering="crispEdges"><rect x="3" y="0" width="2" height="2"/><rect x="2" y="2" width="4" height="2"/><rect x="1" y="4" width="6" height="3"/><rect x="2" y="7" width="4" height="1"/></svg>'
+  };
+
+  /* ---------- 日期小工具 ---------- */
+  function pad(n){ return n < 10 ? '0' + n : '' + n; }
+  function dayKey(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+  function startOfDay(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function addDays(d, n){
+    var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    x.setDate(x.getDate() + n);
+    return x;
+  }
+
+  /* ---------- 数据 ---------- */
+  function defaultState(){
+    return {
+      habits: [
+        { id:'h_word', name:'背单词',      icon:'book',     done:{} },
+        { id:'h_move', name:'运动 20 分钟', icon:'dumbbell', done:{} },
+        { id:'h_read', name:'睡前读书',    icon:'moon',     done:{} }
+      ]
+    };
+  }
+
+  var state = null;
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    state = raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    state = null;
+  }
+  if (!state || !Array.isArray(state.habits) || state.habits.length === 0) {
+    state = defaultState();
+  }
+
+  function save(){
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  /* ---------- 元素 ---------- */
+  var today = new Date();
+  var elDateMain = document.getElementById('dateMain');
+  var elDateSub  = document.getElementById('dateSub');
+  var elList     = document.getElementById('habitList');
+  var elCells    = document.getElementById('cells');
+  var elDone     = document.getElementById('doneCount');
+  var elTotal    = document.getElementById('totalCount');
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function isDone(h, key){ return !!(h.done && h.done[key]); }
+
+  /* 连续天数：今天没打就从昨天往前数 */
+  function streakOf(h){
+    var cursor = startOfDay(today);
+    if (!isDone(h, dayKey(cursor))) cursor = addDays(cursor, -1);
+    var n = 0;
+    while (isDone(h, dayKey(cursor))) {
+      n++;
+      cursor = addDays(cursor, -1);
+      if (n > 3650) break;
+    }
+    return n;
+  }
+
+  function streakText(h){
+    var done = isDone(h, dayKey(today));
+    var s = streakOf(h);
+    if (s > 0) return '连续 ' + s + ' 天' + (done ? '' : ' · 今天还没打');
+    return '今天还没动';
+  }
+
+  function renderDate(){
+    elDateMain.textContent = (today.getMonth()+1) + '月' + today.getDate() + '日';
+    elDateSub.textContent = today.getFullYear() + ' · ' + WEEKDAYS[today.getDay()];
+  }
+
+  function renderHabits(){
+    var html = '';
+    for (var i = 0; i < state.habits.length; i++) {
+      var h = state.habits[i];
+      var done = isDone(h, dayKey(today));
+      html += '<button class="habit' + (done ? ' done' : '') + '" type="button"'
+            + ' data-id="' + escapeHtml(h.id) + '"'
+            + ' aria-pressed="' + (done ? 'true' : 'false') + '">'
+            + '<span class="habit-icon">' + (ICONS[h.icon] || ICONS.book) + '</span>'
+            + '<span class="habit-text">'
+            +   '<span class="habit-name">' + escapeHtml(h.name) + '</span>'
+            +   '<span class="habit-streak">' + escapeHtml(streakText(h)) + '</span>'
+            + '</span>'
+            + '<span class="check">'
+            +   '<svg viewBox="0 0 10 10"><path d="M1.5 5.2 L4 7.6 L8.6 2.6" fill="none" stroke="#FFFDF7" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter"/></svg>'
+            + '</span>'
+            + '</button>';
+    }
+    elList.innerHTML = html;
+  }
+
+  function renderToday(){
+    var total = state.habits.length;
+    var key = dayKey(today);
+    var doneCount = 0;
+    for (var i = 0; i < total; i++) {
+      if (isDone(state.habits[i], key)) doneCount++;
+    }
+    elDone.textContent = doneCount;
+    elTotal.textContent = '/' + total;
+
+    var cellsHtml = '';
+    for (var j = 0; j < total; j++) {
+      cellsHtml += '<span class="cell' + (j < doneCount ? ' on' : '') + '"></span>';
+    }
+    elCells.innerHTML = cellsHtml;
+  }
+
+  function findHabit(id){
+    for (var i = 0; i < state.habits.length; i++) {
+      if (state.habits[i].id === id) return state.habits[i];
+    }
+    return null;
+  }
+
+  /* 页面开着跨过零点：直接刷新到新的一天 */
+  function dayRolled(){
+    if (dayKey(new Date()) !== dayKey(today)) {
+      location.reload();
+      return true;
+    }
+    return false;
+  }
+
+  elList.addEventListener('click', function(e){
+    var target = e.target;
+    var btn = target && target.closest ? target.closest('.habit') : null;
+    if (!btn) return;
+    if (dayRolled()) return;
+
+    var h = findHabit(btn.getAttribute('data-id'));
+    if (!h) return;
+
+    var key = dayKey(today);
+    var nowDone = !isDone(h, key);
+
+    if (nowDone) h.done[key] = true;
+    else delete h.done[key];
+    save();
+
+    btn.classList.toggle('done', nowDone);
+    btn.setAttribute('aria-pressed', nowDone ? 'true' : 'false');
+
+    var streakEl = btn.querySelector('.habit-streak');
+    if (streakEl) streakEl.textContent = streakText(h);
+
+    if (nowDone) {
+      var check = btn.querySelector('.check');
+      if (check) {
+        check.classList.remove('tick');
+        void check.offsetWidth;
+        check.classList.add('tick');
+      }
+    }
+
+    renderToday();
+  });
+
+  renderDate();
+  renderHabits();
+  renderToday();
+})();
+</script>
+</body>
+</html>
