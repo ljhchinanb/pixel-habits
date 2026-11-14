@@ -167,6 +167,35 @@
   }
   .check.tick{animation:tick .3s steps(4,end);}
 
+  /* 时长徽章 */
+  .time-badge{
+    flex:0 0 auto;min-width:46px;height:34px;
+    display:flex;align-items:baseline;justify-content:center;gap:1px;
+    border:3px solid var(--ink);background:var(--white);
+    font-size:15px;font-weight:800;color:var(--ink-soft);
+    padding:0 5px;
+  }
+  .time-badge small{font-size:9px;font-weight:700;margin-left:1px;}
+  .habit.done .time-badge{background:var(--mint-deep);border-color:var(--mint-deep);color:var(--white);}
+
+  /* 补卡条 */
+  .makeup{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;
+    margin:-9px 0 14px;
+    padding:8px 12px;
+    background:var(--peach);
+    border:3px solid var(--ink);
+    font-size:12px;font-weight:700;color:var(--ink);
+    line-height:1.5;
+  }
+  .makeup-btns{display:flex;gap:6px;}
+  .makeup-btn{
+    font:inherit;font-size:12px;font-weight:800;
+    padding:4px 9px;border:2px solid var(--ink);background:var(--white);color:var(--ink);
+    cursor:pointer;-webkit-appearance:none;appearance:none;
+  }
+  .makeup-btn:active{transform:translate(1px,1px);}
+
   .empty{
     border:2px dashed var(--ink-soft);
     padding:22px 16px;
@@ -202,7 +231,6 @@
       transform:translate(-50%,110%);
       border-left:3px solid var(--ink);
       border-right:3px solid var(--ink);
-      box-shadow:6px 0 0 var(--ink);
     }
     .sheet.show{transform:translate(-50%,0);}
   }
@@ -235,8 +263,8 @@
   }
   .icon-btn svg{width:22px;height:22px;fill:currentColor;display:block;}
   .icon-btn.on{background:var(--mint-soft);color:var(--mint-deep);border-color:var(--mint-deep);}
-  .freq-row{display:flex;gap:8px;}
-  .freq-btn{
+  .freq-row,.type-row{display:flex;gap:8px;}
+  .freq-btn,.type-btn{
     flex:1;padding:10px;
     border:3px solid var(--ink);background:var(--white);
     font:inherit;font-size:15px;font-weight:700;color:var(--ink);
@@ -244,7 +272,7 @@
     -webkit-appearance:none;appearance:none;
     transition:background-color .12s;
   }
-  .freq-btn.on{background:var(--mint-soft);border-color:var(--mint-deep);color:var(--mint-deep);}
+  .freq-btn.on,.type-btn.on{background:var(--mint-soft);border-color:var(--mint-deep);color:var(--mint-deep);}
   .times-row{
     display:flex;align-items:center;justify-content:center;gap:14px;
     margin-top:14px;font-size:15px;font-weight:700;
@@ -256,6 +284,16 @@
     cursor:pointer;-webkit-appearance:none;appearance:none;
   }
   .times-num{font-size:22px;font-weight:800;min-width:28px;text-align:center;color:var(--mint-deep);}
+  .threshold-row{display:flex;gap:10px;margin-top:12px;}
+  .threshold-col{flex:1;}
+  .threshold-col span{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;letter-spacing:.5px;}
+  .num-input{
+    width:100%;font:inherit;font-size:17px;font-weight:700;text-align:center;
+    padding:9px 4px;
+    border:3px solid var(--ink);background:var(--white);color:var(--ink);
+    box-shadow:3px 3px 0 var(--ink);outline:none;border-radius:0;
+    -webkit-appearance:none;appearance:none;
+  }
   .sheet-actions{display:flex;gap:10px;margin-top:24px;}
   .btn-primary{
     flex:1;padding:14px;
@@ -272,6 +310,28 @@
     box-shadow:4px 4px 0 var(--ink);
     font:inherit;font-size:14px;font-weight:700;
     cursor:pointer;-webkit-appearance:none;appearance:none;
+  }
+
+  /* 时长输入 */
+  .time-big{
+    text-align:center;font-size:56px;font-weight:800;
+    color:var(--mint-deep);line-height:1;margin:14px 0 2px;
+    letter-spacing:2px;
+  }
+  .time-big small{font-size:13px;color:var(--ink-soft);margin-left:6px;font-weight:700;letter-spacing:1px;}
+  .quick-row{display:flex;gap:8px;margin:16px 0 12px;}
+  .quick-btn{
+    flex:1;padding:11px 0;
+    border:3px solid var(--ink);background:var(--white);
+    font:inherit;font-size:14px;font-weight:800;color:var(--ink);
+    box-shadow:3px 3px 0 var(--ink);cursor:pointer;
+    -webkit-appearance:none;appearance:none;
+    transition:transform .07s ease,box-shadow .07s ease;
+  }
+  .quick-btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink);}
+  .hint{
+    text-align:center;font-size:12px;color:var(--ink-soft);
+    margin:12px 0 0;line-height:1.7;letter-spacing:.5px;
   }
 
   /* ---------- 底部 ---------- */
@@ -330,6 +390,7 @@
   <p class="tip">数据只存在这台设备里<br>清了缓存就找不回来了</p>
 </div>
 
+<!-- 新增 / 修改习惯 -->
 <div class="mask" id="mask"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
   <div class="sheet-head">
@@ -338,27 +399,69 @@
   </div>
 
   <label class="field-label" for="nameInput">叫什么</label>
-  <input class="field-input" id="nameInput" type="text" maxlength="12" placeholder="比如：背单词、跑步、早睡">
+  <input class="field-input" id="nameInput" type="text" maxlength="12" placeholder="比如：背单词、学习、健身">
 
   <label class="field-label">挑个图标</label>
   <div class="icon-row" id="iconRow"></div>
 
-  <label class="field-label">多久一次</label>
-  <div class="freq-row">
-    <button class="freq-btn" id="freqDaily" type="button" data-freq="daily">每天</button>
-    <button class="freq-btn" id="freqWeekly" type="button" data-freq="weekly">每周</button>
+  <label class="field-label">怎么算打卡</label>
+  <div class="type-row">
+    <button class="type-btn" id="typeCheck" type="button" data-type="check">打勾</button>
+    <button class="type-btn" id="typeTime" type="button" data-type="time">记时长</button>
   </div>
-  <div class="times-row" id="timesRow" hidden>
-    <span>每周</span>
-    <button class="times-btn" id="minusTimes" type="button" aria-label="减少">−</button>
-    <span class="times-num" id="timesNum">3</span>
-    <span>次</span>
-    <button class="times-btn" id="plusTimes" type="button" aria-label="增加">＋</button>
+
+  <div id="timeConfig" hidden>
+    <div class="threshold-row">
+      <div class="threshold-col">
+        <span>每天达标（分钟）</span>
+        <input class="num-input" id="targetInput" type="number" inputmode="numeric" min="1" max="1440" value="30">
+      </div>
+      <div class="threshold-col">
+        <span>补卡门槛（分钟）</span>
+        <input class="num-input" id="bonusInput" type="number" inputmode="numeric" min="1" max="1440" value="60">
+      </div>
+    </div>
+  </div>
+
+  <div id="freqConfig">
+    <label class="field-label">多久一次</label>
+    <div class="freq-row">
+      <button class="freq-btn" id="freqDaily" type="button" data-freq="daily">每天</button>
+      <button class="freq-btn" id="freqWeekly" type="button" data-freq="weekly">每周</button>
+    </div>
+    <div class="times-row" id="timesRow" hidden>
+      <span>每周</span>
+      <button class="times-btn" id="minusTimes" type="button" aria-label="减少">−</button>
+      <span class="times-num" id="timesNum">3</span>
+      <span>次</span>
+      <button class="times-btn" id="plusTimes" type="button" aria-label="增加">＋</button>
+    </div>
   </div>
 
   <div class="sheet-actions">
     <button class="btn-danger" id="deleteHabit" type="button" hidden>删除</button>
     <button class="btn-primary" id="saveHabit" type="button">保存</button>
+  </div>
+</div>
+
+<!-- 记时长 -->
+<div class="mask" id="timeMask"></div>
+<div class="sheet" id="timeSheet" role="dialog" aria-modal="true" aria-labelledby="timeSheetTitle">
+  <div class="sheet-head">
+    <span class="sheet-title" id="timeSheetTitle">记今天</span>
+    <button class="sheet-close" id="timeSheetClose" type="button" aria-label="关闭">✕</button>
+  </div>
+  <div class="time-big"><span id="timeBig">0</span><small>分钟</small></div>
+  <div class="quick-row">
+    <button class="quick-btn" type="button" data-add="15">+15</button>
+    <button class="quick-btn" type="button" data-add="30">+30</button>
+    <button class="quick-btn" type="button" data-add="45">+45</button>
+    <button class="quick-btn" type="button" data-add="0" id="quickClear">清零</button>
+  </div>
+  <input class="field-input" id="timeInput" type="number" inputmode="numeric" min="0" max="1440" placeholder="也可以直接输分钟数">
+  <p class="hint" id="timeHint"></p>
+  <div class="sheet-actions">
+    <button class="btn-primary" id="saveTime" type="button">保存</button>
   </div>
 </div>
 
@@ -395,17 +498,26 @@
   }
   function startOfWeek(d){
     var x = startOfDay(d);
-    var offset = (x.getDay() + 6) % 7; /* 周一算一周开头 */
+    var offset = (x.getDay() + 6) % 7;
     return addDays(x, -offset);
+  }
+  function shortDay(key){
+    var p = key.split('-');
+    return parseInt(p[1],10) + '月' + parseInt(p[2],10) + '日';
+  }
+  function clampNum(v, lo, hi){
+    v = parseInt(v, 10);
+    if (isNaN(v)) v = lo;
+    return Math.max(lo, Math.min(hi, v));
   }
 
   /* ---------- 数据 ---------- */
   function defaultState(){
     return {
       habits: [
-        { id:'h_word', name:'背单词',       icon:'book',     freq:{type:'daily'}, done:{} },
-        { id:'h_move', name:'运动 20 分钟', icon:'dumbbell', freq:{type:'daily'}, done:{} },
-        { id:'h_read', name:'睡前读书',     icon:'moon',     freq:{type:'daily'}, done:{} }
+        { id:'h_word', name:'背单词',       icon:'book',     type:'check', freq:{type:'daily'}, done:{} },
+        { id:'h_move', name:'运动 20 分钟', icon:'dumbbell', type:'check', freq:{type:'daily'}, done:{} },
+        { id:'h_read', name:'睡前读书',     icon:'moon',     type:'check', freq:{type:'daily'}, done:{} }
       ]
     };
   }
@@ -423,10 +535,19 @@
   for (var mi = 0; mi < state.habits.length; mi++) {
     var mh = state.habits[mi];
     if (!mh.done || typeof mh.done !== 'object') mh.done = {};
-    if (!mh.freq || !mh.freq.type) mh.freq = { type:'daily' };
-    if (mh.freq.type === 'weekly') {
-      var t = parseInt(mh.freq.times, 10);
-      mh.freq.times = isNaN(t) ? 3 : Math.max(1, Math.min(7, t));
+    if (!mh.type) mh.type = 'check';
+    if (mh.type === 'time') {
+      if (!mh.log || typeof mh.log !== 'object') mh.log = {};
+      if (!mh.makeup || typeof mh.makeup !== 'object') mh.makeup = {};
+      mh.target = clampNum(mh.target || 30, 1, 1440);
+      mh.bonus = clampNum(mh.bonus || 60, 1, 1440);
+      if (mh.bonus <= mh.target) mh.bonus = mh.target + 30;
+      mh.freq = { type:'daily' };
+    } else {
+      if (!mh.freq || !mh.freq.type) mh.freq = { type:'daily' };
+      if (mh.freq.type === 'weekly') {
+        mh.freq.times = clampNum(mh.freq.times || 3, 1, 7);
+      }
     }
     if (!ICONS[mh.icon]) mh.icon = 'book';
   }
@@ -455,6 +576,12 @@
   var elSheetClose = document.getElementById('sheetClose');
   var elNameInput  = document.getElementById('nameInput');
   var elIconRow    = document.getElementById('iconRow');
+  var elTypeCheck  = document.getElementById('typeCheck');
+  var elTypeTime   = document.getElementById('typeTime');
+  var elTimeConfig = document.getElementById('timeConfig');
+  var elTargetInput = document.getElementById('targetInput');
+  var elBonusInput  = document.getElementById('bonusInput');
+  var elFreqConfig = document.getElementById('freqConfig');
   var elFreqDaily  = document.getElementById('freqDaily');
   var elFreqWeekly = document.getElementById('freqWeekly');
   var elTimesRow   = document.getElementById('timesRow');
@@ -464,20 +591,42 @@
   var elSaveHabit  = document.getElementById('saveHabit');
   var elDeleteHabit = document.getElementById('deleteHabit');
 
+  var elTimeMask   = document.getElementById('timeMask');
+  var elTimeSheet  = document.getElementById('timeSheet');
+  var elTimeSheetTitle = document.getElementById('timeSheetTitle');
+  var elTimeSheetClose = document.getElementById('timeSheetClose');
+  var elTimeBig    = document.getElementById('timeBig');
+  var elTimeInput  = document.getElementById('timeInput');
+  var elTimeHint   = document.getElementById('timeHint');
+  var elSaveTime   = document.getElementById('saveTime');
+  var elQuickClear = document.getElementById('quickClear');
+
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, function(c){
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
     });
   }
 
-  function isDone(h, key){ return !!(h.done && h.done[key]); }
+  /* ---------- 判定 ---------- */
+  function isSuccess(h, key){
+    if (h.type === 'time') {
+      if (h.makeup && h.makeup[key]) return true;
+      var m = (h.log && h.log[key]) || 0;
+      return m >= h.target;
+    }
+    return !!(h.done && h.done[key]);
+  }
+
+  function minutesOf(h, key){
+    return (h.log && h.log[key]) || 0;
+  }
 
   /* ---------- 连续天数 / 每周进度 ---------- */
   function streakOf(h){
     var cursor = startOfDay(today);
-    if (!isDone(h, dayKey(cursor))) cursor = addDays(cursor, -1);
+    if (!isSuccess(h, dayKey(cursor))) cursor = addDays(cursor, -1);
     var n = 0;
-    while (isDone(h, dayKey(cursor))) {
+    while (isSuccess(h, dayKey(cursor))) {
       n++;
       cursor = addDays(cursor, -1);
       if (n > 3650) break;
@@ -488,7 +637,7 @@
   function weekDoneCount(h, weekStart){
     var n = 0;
     for (var i = 0; i < 7; i++) {
-      if (isDone(h, dayKey(addDays(weekStart, i)))) n++;
+      if (isSuccess(h, dayKey(addDays(weekStart, i)))) n++;
     }
     return n;
   }
@@ -507,24 +656,62 @@
   }
 
   function metaText(h){
+    if (h.type === 'time') {
+      var key = dayKey(today);
+      var m = minutesOf(h, key);
+      var done = isSuccess(h, key);
+      var parts = [];
+      if (done && m >= h.target) parts.push('今天 ' + m + ' 分钟 · 达标');
+      else if (done) parts.push('今天已补卡');
+      else if (m > 0) parts.push('今天 ' + m + '/' + h.target + ' 分钟');
+      else parts.push('今天还没记');
+      var s = streakOf(h);
+      if (s > 0) parts.push('连续 ' + s + ' 天');
+      return parts.join(' · ');
+    }
     if (h.freq.type === 'weekly') {
       var goal = h.freq.times;
       var n = weekDoneCount(h, startOfWeek(today));
       var txt = '本周 ' + n + '/' + goal + (n >= goal ? ' 达标' : '');
-      var s = weekStreak(h);
-      if (s > 0) txt += ' · 连续 ' + s + ' 周';
+      var ws = weekStreak(h);
+      if (ws > 0) txt += ' · 连续 ' + ws + ' 周';
       return txt;
     }
-    var doneToday = isDone(h, dayKey(today));
+    var doneToday = isSuccess(h, dayKey(today));
     var streak = streakOf(h);
     if (streak > 0) return '连续 ' + streak + ' 天' + (doneToday ? '' : ' · 今天还没打');
     return '今天还没动';
+  }
+
+  /* ---------- 补卡 ---------- */
+  /* 今天学习量超过补卡门槛 bonus，才能补昨天/前天（且那两天有记录但没达标） */
+  function makeupCandidates(h){
+    if (h.type !== 'time') return [];
+    if (minutesOf(h, dayKey(today)) < h.bonus) return [];
+    var out = [];
+    for (var off = 1; off <= 2; off++) {
+      var k = dayKey(addDays(today, -off));
+      if (h.makeup[k]) continue;
+      var m = minutesOf(h, k);
+      if (m > 0 && m < h.target) out.push(k);
+    }
+    return out;
   }
 
   /* ---------- 渲染 ---------- */
   function renderDate(){
     elDateMain.textContent = (today.getMonth()+1) + '月' + today.getDate() + '日';
     elDateSub.textContent = today.getFullYear() + ' · ' + WEEKDAYS[today.getDay()];
+  }
+
+  function habitRight(h, done){
+    if (h.type === 'time') {
+      var m = minutesOf(h, dayKey(today));
+      return '<span class="time-badge' + (done ? ' on' : '') + '">'
+           + (m > 0 ? m : '—')
+           + '<small>分</small></span>';
+    }
+    return '<span class="check">' + TICK_ICON + '</span>';
   }
 
   function renderHabits(){
@@ -534,7 +721,7 @@
     }
     for (var i = 0; i < state.habits.length; i++) {
       var h = state.habits[i];
-      var done = isDone(h, dayKey(today));
+      var done = isSuccess(h, dayKey(today));
       html += '<div class="habit' + (done ? ' done' : '') + '" role="button" tabindex="0"'
             + ' data-id="' + escapeHtml(h.id) + '"'
             + ' aria-pressed="' + (done ? 'true' : 'false') + '">'
@@ -544,8 +731,21 @@
             +   '<span class="habit-streak">' + escapeHtml(metaText(h)) + '</span>'
             + '</span>'
             + '<button class="habit-edit" type="button" aria-label="修改这个习惯">' + EDIT_ICON + '</button>'
-            + '<span class="check">' + TICK_ICON + '</span>'
+            + habitRight(h, done)
             + '</div>';
+
+      var cands = makeupCandidates(h);
+      if (cands.length) {
+        var btnHtml = '';
+        for (var c = 0; c < cands.length; c++) {
+          btnHtml += '<button class="makeup-btn" type="button" data-id="' + escapeHtml(h.id) + '"'
+                   + ' data-day="' + cands[c] + '">补 ' + shortDay(cands[c]) + '</button>';
+        }
+        html += '<div class="makeup" data-id="' + escapeHtml(h.id) + '">'
+              + '<span>今天超额了，可以补之前没达标的：</span>'
+              + '<span class="makeup-btns">' + btnHtml + '</span>'
+              + '</div>';
+      }
     }
     elList.innerHTML = html;
   }
@@ -555,7 +755,7 @@
     var key = dayKey(today);
     var doneCount = 0;
     for (var i = 0; i < total; i++) {
-      if (isDone(state.habits[i], key)) doneCount++;
+      if (isSuccess(state.habits[i], key)) doneCount++;
     }
     elDone.textContent = doneCount;
     elTotal.textContent = '/' + total;
@@ -574,7 +774,6 @@
     return null;
   }
 
-  /* 页面开着跨过零点：直接刷新到新的一天 */
   function dayRolled(){
     if (dayKey(new Date()) !== dayKey(today)) {
       location.reload();
@@ -583,49 +782,69 @@
     return false;
   }
 
-  function refreshCard(card, h){
-    var done = isDone(h, dayKey(today));
-    card.classList.toggle('done', done);
-    card.setAttribute('aria-pressed', done ? 'true' : 'false');
-    var streakEl = card.querySelector('.habit-streak');
-    if (streakEl) streakEl.textContent = metaText(h);
-  }
-
-  /* ---------- 打卡 ---------- */
+  /* ---------- 打卡（打勾型） ---------- */
   function toggleHabit(card){
     if (dayRolled()) return;
     var h = findHabit(card.getAttribute('data-id'));
-    if (!h) return;
+    if (!h || h.type === 'time') return;
 
     var key = dayKey(today);
-    var nowDone = !isDone(h, key);
+    var nowDone = !isSuccess(h, key);
     if (nowDone) h.done[key] = true;
     else delete h.done[key];
     save();
 
-    refreshCard(card, h);
+    renderHabits();
+    renderToday();
+
     if (nowDone) {
-      var check = card.querySelector('.check');
-      if (check) {
-        check.classList.remove('tick');
-        void check.offsetWidth;
-        check.classList.add('tick');
+      var card2 = elList.querySelector('.habit[data-id="' + h.id + '"] .check');
+      if (card2) {
+        card2.classList.remove('tick');
+        void card2.offsetWidth;
+        card2.classList.add('tick');
       }
     }
+  }
+
+  /* ---------- 补卡动作 ---------- */
+  function doMakeup(id, key){
+    if (dayRolled()) return;
+    var h = findHabit(id);
+    if (!h || h.type !== 'time') return;
+    if (h.makeup[key]) return;
+    h.makeup[key] = true;
+    save();
+    renderHabits();
     renderToday();
   }
 
   elList.addEventListener('click', function(e){
-    var editBtn = e.target.closest ? e.target.closest('.habit-edit') : null;
+    var t = e.target;
+
+    var makeupBtn = t.closest ? t.closest('.makeup-btn') : null;
+    if (makeupBtn) {
+      doMakeup(makeupBtn.getAttribute('data-id'), makeupBtn.getAttribute('data-day'));
+      return;
+    }
+
+    var editBtn = t.closest ? t.closest('.habit-edit') : null;
     if (editBtn) {
       var card = editBtn.closest('.habit');
       var h = card ? findHabit(card.getAttribute('data-id')) : null;
       if (h) openSheet(h);
       return;
     }
-    var card2 = e.target.closest ? e.target.closest('.habit') : null;
+
+    var card2 = t.closest ? t.closest('.habit') : null;
     if (!card2) return;
-    toggleHabit(card2);
+    var habit = findHabit(card2.getAttribute('data-id'));
+    if (!habit) return;
+    if (habit.type === 'time') {
+      openTimeSheet(habit);
+    } else {
+      toggleHabit(card2);
+    }
   });
 
   elList.addEventListener('keydown', function(e){
@@ -639,6 +858,7 @@
   /* ---------- 弹层：新增 / 修改 ---------- */
   var editingId = null;
   var formIcon = 'book';
+  var formType = 'check';
   var formFreq = 'daily';
   var formTimes = 3;
 
@@ -652,6 +872,13 @@
     elIconRow.innerHTML = html;
   }
 
+  function renderTypeUI(){
+    elTypeCheck.classList.toggle('on', formType === 'check');
+    elTypeTime.classList.toggle('on', formType === 'time');
+    elTimeConfig.hidden = formType !== 'time';
+    elFreqConfig.hidden = formType === 'time';
+  }
+
   function renderFreqUI(){
     elFreqDaily.classList.toggle('on', formFreq === 'daily');
     elFreqWeekly.classList.toggle('on', formFreq === 'weekly');
@@ -662,13 +889,18 @@
   function openSheet(h){
     editingId = h ? h.id : null;
     formIcon = h ? (ICONS[h.icon] ? h.icon : 'book') : 'book';
+    formType = h ? h.type : 'check';
     formFreq = h && h.freq.type === 'weekly' ? 'weekly' : 'daily';
     formTimes = h && h.freq.type === 'weekly' ? h.freq.times : 3;
 
     elSheetTitle.textContent = h ? '改习惯' : '新习惯';
     elNameInput.value = h ? h.name : '';
+    elTargetInput.value = h && h.type === 'time' ? h.target : 30;
+    elBonusInput.value = h && h.type === 'time' ? h.bonus : 60;
     elDeleteHabit.hidden = !h;
+
     renderIconRow();
+    renderTypeUI();
     renderFreqUI();
 
     elMask.classList.add('show');
@@ -691,6 +923,9 @@
     formIcon = b.getAttribute('data-icon');
     renderIconRow();
   });
+
+  elTypeCheck.addEventListener('click', function(){ formType = 'check'; renderTypeUI(); });
+  elTypeTime.addEventListener('click', function(){ formType = 'time'; renderTypeUI(); });
 
   elFreqDaily.addEventListener('click', function(){ formFreq = 'daily'; renderFreqUI(); });
   elFreqWeekly.addEventListener('click', function(){
@@ -715,26 +950,50 @@
       setTimeout(function(){ elNameInput.style.borderColor = ''; }, 1200);
       return;
     }
-    var freq = formFreq === 'weekly'
-      ? { type:'weekly', times: formTimes }
-      : { type:'daily' };
 
+    var h;
     if (editingId) {
-      var h = findHabit(editingId);
-      if (h) {
-        h.name = name;
-        h.icon = formIcon;
-        h.freq = freq;
+      h = findHabit(editingId);
+      if (!h) return;
+      h.name = name;
+      h.icon = formIcon;
+      h.type = formType;
+      if (formType === 'time') {
+        h.target = clampNum(elTargetInput.value, 1, 1440);
+        h.bonus = clampNum(elBonusInput.value, 1, 1440);
+        if (h.bonus <= h.target) h.bonus = h.target + 30;
+        h.freq = { type:'daily' };
+        if (!h.log) h.log = {};
+        if (!h.makeup) h.makeup = {};
+      } else {
+        h.freq = formFreq === 'weekly'
+          ? { type:'weekly', times: formTimes }
+          : { type:'daily' };
+        if (!h.done) h.done = {};
       }
     } else {
-      state.habits.push({
+      h = {
         id: genId(),
         name: name,
         icon: formIcon,
-        freq: freq,
-        done: {}
-      });
+        type: formType,
+        done: {},
+        freq: { type:'daily' }
+      };
+      if (formType === 'time') {
+        h.target = clampNum(elTargetInput.value, 1, 1440);
+        h.bonus = clampNum(elBonusInput.value, 1, 1440);
+        if (h.bonus <= h.target) h.bonus = h.target + 30;
+        h.log = {};
+        h.makeup = {};
+      } else {
+        h.freq = formFreq === 'weekly'
+          ? { type:'weekly', times: formTimes }
+          : { type:'daily' };
+      }
+      state.habits.push(h);
     }
+
     save();
     renderHabits();
     renderToday();
@@ -743,7 +1002,7 @@
 
   elDeleteHabit.addEventListener('click', function(){
     if (!editingId) return;
-    if (!window.confirm('删掉这个习惯？它之前打的卡也会一起没。')) return;
+    if (!window.confirm('删掉这个习惯？它之前的记录也会一起没。')) return;
     var next = [];
     for (var i = 0; i < state.habits.length; i++) {
       if (state.habits[i].id !== editingId) next.push(state.habits[i]);
@@ -753,6 +1012,74 @@
     renderHabits();
     renderToday();
     closeSheet();
+  });
+
+  /* ---------- 弹层：记时长 ---------- */
+  var timeEditingId = null;
+  var timeMinutes = 0;
+
+  function syncTimeUI(){
+    elTimeBig.textContent = timeMinutes;
+    elTimeInput.value = timeMinutes > 0 ? timeMinutes : '';
+  }
+
+  function refreshHint(){
+    var h = findHabit(timeEditingId);
+    if (!h) return;
+    var txt = '';
+    var done = timeMinutes >= h.target;
+    if (timeMinutes <= 0) txt = '达标 ' + h.target + ' 分钟，补卡门槛 ' + h.bonus + ' 分钟';
+    else if (done) txt = '够达标线了' + (timeMinutes >= h.bonus ? '，而且超过补卡门槛，可以去补昨天/前天' : '');
+    else txt = '还差 ' + (h.target - timeMinutes) + ' 分钟才达标';
+    elTimeHint.textContent = txt;
+  }
+
+  function openTimeSheet(h){
+    timeEditingId = h.id;
+    timeMinutes = minutesOf(h, dayKey(today));
+    elTimeSheetTitle.textContent = '记「' + h.name + '」';
+    syncTimeUI();
+    refreshHint();
+    elTimeMask.classList.add('show');
+    elTimeSheet.classList.add('show');
+  }
+
+  function closeTimeSheet(){
+    elTimeMask.classList.remove('show');
+    elTimeSheet.classList.remove('show');
+    timeEditingId = null;
+  }
+
+  elTimeSheetClose.addEventListener('click', closeTimeSheet);
+  elTimeMask.addEventListener('click', closeTimeSheet);
+
+  var quickBtns = document.querySelectorAll('.quick-btn');
+  for (var qb = 0; qb < quickBtns.length; qb++) {
+    quickBtns[qb].addEventListener('click', function(){
+      var add = parseInt(this.getAttribute('data-add'), 10) || 0;
+      timeMinutes = Math.max(0, Math.min(1440, timeMinutes + add));
+      syncTimeUI();
+      refreshHint();
+    });
+  }
+
+  elTimeInput.addEventListener('input', function(){
+    timeMinutes = clampNum(elTimeInput.value, 0, 1440);
+    elTimeBig.textContent = timeMinutes;
+    refreshHint();
+  });
+
+  elSaveTime.addEventListener('click', function(){
+    if (!timeEditingId) return;
+    var h = findHabit(timeEditingId);
+    if (!h) return;
+    var key = dayKey(today);
+    if (timeMinutes > 0) h.log[key] = timeMinutes;
+    else delete h.log[key];
+    save();
+    renderHabits();
+    renderToday();
+    closeTimeSheet();
   });
 
   /* ---------- 启动 ---------- */
