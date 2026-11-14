@@ -7,6 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="像素习惯">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="favicon.png">
 <title>像素习惯</title>
 <style>
   :root{
@@ -19,6 +21,7 @@
     --ink:#2B473C;
     --ink-soft:#70897D;
     --peach:#F2BE9E;
+    --sand:#EDD9A3;
     --danger:#B4534B;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -129,6 +132,7 @@
   }
   .habit:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink);}
   .habit.done{background:var(--mint-soft);}
+  .habit.is-rest{background:var(--cream-deep);}
   .habit-icon{
     flex:0 0 auto;width:36px;height:36px;
     display:grid;place-items:center;
@@ -167,7 +171,6 @@
   }
   .check.tick{animation:tick .3s steps(4,end);}
 
-  /* 时长徽章 */
   .time-badge{
     flex:0 0 auto;min-width:46px;height:34px;
     display:flex;align-items:baseline;justify-content:center;gap:1px;
@@ -178,7 +181,6 @@
   .time-badge small{font-size:9px;font-weight:700;margin-left:1px;}
   .habit.done .time-badge{background:var(--mint-deep);border-color:var(--mint-deep);color:var(--white);}
 
-  /* 补卡条 */
   .makeup{
     display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;
     margin:-9px 0 14px;
@@ -204,6 +206,90 @@
     color:var(--ink-soft);
     line-height:1.8;
     margin-bottom:14px;
+  }
+
+  /* ---------- 打卡墙 ---------- */
+  .wall-section{margin-top:30px;}
+  .wall-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+  .wall-tab{
+    font:inherit;font-size:12px;font-weight:700;color:var(--ink-soft);
+    padding:5px 9px;border:2px solid var(--ink-soft);background:var(--white);
+    cursor:pointer;-webkit-appearance:none;appearance:none;
+    letter-spacing:.5px;
+  }
+  .wall-tab.on{background:var(--mint-soft);border-color:var(--mint-deep);color:var(--mint-deep);}
+  .wall-frame{
+    background:var(--white);
+    border:3px solid var(--ink);
+    box-shadow:4px 4px 0 var(--ink);
+    padding:10px;
+  }
+  .wall-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .wall-scroll::-webkit-scrollbar{display:none;}
+  .wall-grid{
+    display:grid;
+    grid-auto-flow:column;
+    grid-template-rows:repeat(7, 10px);
+    gap:2px;
+    width:max-content;
+  }
+  .wcell{
+    width:10px;height:10px;
+    border:1px solid #BFD3C8;
+    background:var(--white);
+    display:block;
+  }
+  .wcell.future{border-color:transparent;background:transparent;}
+  .wcell.ok{background:var(--mint-deep);border-color:var(--mint-deep);}
+  .wcell.part{border-color:var(--mint-deep);background:var(--mint-soft);}
+  .wcell.rest{background:var(--sand);border-color:#CBB47A;}
+  .wcell.makeup{background:var(--peach);border-color:#C98B6B;}
+  .wall-legend{
+    display:flex;gap:12px;flex-wrap:wrap;
+    margin-top:10px;font-size:10px;color:var(--ink-soft);letter-spacing:.5px;
+  }
+  .wall-legend span{display:flex;align-items:center;gap:4px;}
+  .wall-legend i{display:inline-block;width:10px;height:10px;border:1px solid #D5E3DA;}
+  .wall-legend i.ok{background:var(--mint-deep);border-color:var(--mint-deep);}
+  .wall-legend i.rest{background:var(--sand);border-color:#CBB47A;}
+  .wall-legend i.mk{background:var(--peach);border-color:#C98B6B;}
+  .wall-legend i.part{background:var(--mint-soft);border-color:var(--mint-deep);}
+  .wall-hint{font-size:10px;color:var(--ink-soft);margin:8px 0 0;letter-spacing:.5px;}
+
+  .stats{
+    margin-top:14px;
+    border:3px solid var(--ink);
+    background:var(--white);
+    box-shadow:4px 4px 0 var(--ink);
+    padding:12px 14px;
+  }
+  .stat-line{
+    display:flex;justify-content:space-between;align-items:baseline;
+    font-size:13px;padding:5px 0;
+    border-bottom:1px dashed var(--cream-deep);
+  }
+  .stat-line:last-child{border-bottom:none;}
+  .stat-line span{color:var(--ink-soft);font-size:12px;letter-spacing:.5px;}
+  .stat-line b{font-size:15px;letter-spacing:.5px;}
+
+  /* ---------- 底部按钮 ---------- */
+  .footer-actions{display:flex;gap:10px;margin-top:26px;}
+  .ghost-btn{
+    flex:1;
+    font:inherit;font-size:13px;font-weight:700;letter-spacing:1px;
+    color:var(--ink);background:var(--white);
+    border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);
+    padding:11px;cursor:pointer;
+    -webkit-appearance:none;appearance:none;
+  }
+  .ghost-btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink);}
+  .tip{
+    margin:18px 0 0;
+    text-align:center;
+    font-size:11px;
+    line-height:2;
+    color:var(--ink-soft);
+    letter-spacing:.5px;
   }
 
   /* ---------- 弹层 ---------- */
@@ -267,7 +353,7 @@
   .freq-btn,.type-btn{
     flex:1;padding:10px;
     border:3px solid var(--ink);background:var(--white);
-    font:inherit;font-size:15px;font-weight:700;color:var(--ink);
+    font:inherit;font-size:14px;font-weight:700;color:var(--ink);
     box-shadow:3px 3px 0 var(--ink);cursor:pointer;
     -webkit-appearance:none;appearance:none;
     transition:background-color .12s;
@@ -275,7 +361,7 @@
   .freq-btn.on,.type-btn.on{background:var(--mint-soft);border-color:var(--mint-deep);color:var(--mint-deep);}
   .times-row{
     display:flex;align-items:center;justify-content:center;gap:14px;
-    margin-top:14px;font-size:15px;font-weight:700;
+    margin-top:14px;font-size:15px;font-weight:700;flex-wrap:wrap;
   }
   .times-btn{
     width:40px;height:40px;padding:0;
@@ -311,6 +397,14 @@
     font:inherit;font-size:14px;font-weight:700;
     cursor:pointer;-webkit-appearance:none;appearance:none;
   }
+  .btn-soft{
+    flex:1;padding:12px;
+    border:3px solid var(--ink);background:var(--white);color:var(--ink);
+    box-shadow:3px 3px 0 var(--ink);
+    font:inherit;font-size:14px;font-weight:700;
+    cursor:pointer;-webkit-appearance:none;appearance:none;
+  }
+  .btn-soft.on{background:var(--mint-soft);border-color:var(--mint-deep);color:var(--mint-deep);}
 
   /* 时长输入 */
   .time-big{
@@ -334,15 +428,14 @@
     margin:12px 0 0;line-height:1.7;letter-spacing:.5px;
   }
 
-  /* ---------- 底部 ---------- */
-  .tip{
-    margin:26px 0 0;
-    text-align:center;
-    font-size:11px;
-    line-height:2;
-    color:var(--ink-soft);
-    letter-spacing:.5px;
+  /* 某一天 */
+  .day-status{
+    font-size:14px;font-weight:700;letter-spacing:.5px;
+    margin:10px 0 4px;line-height:1.7;
   }
+  .day-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
+  .day-actions .btn-soft{flex:1 1 40%;}
+
   @media (prefers-reduced-motion: reduce){
     .check.tick{animation:none;}
     .sheet{transition:none;}
@@ -387,7 +480,31 @@
   </div>
   <main id="habitList"></main>
 
-  <p class="tip">数据只存在这台设备里<br>清了缓存就找不回来了</p>
+  <section class="wall-section" id="wallSection">
+    <div class="section-head">
+      <p class="section-label">打 卡 墙</p>
+    </div>
+    <div class="wall-tabs" id="wallTabs"></div>
+    <div class="wall-frame">
+      <div class="wall-scroll" id="wallScroll">
+        <div class="wall-grid" id="wallGrid"></div>
+      </div>
+      <div class="wall-legend">
+        <span><i class="ok"></i>打卡</span>
+        <span><i class="part"></i>有记录没达标</span>
+        <span><i class="rest"></i>休息日</span>
+        <span><i class="mk"></i>补卡</span>
+      </div>
+      <p class="wall-hint">点格子能补签、改分钟数或标休息日</p>
+    </div>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <div class="footer-actions">
+    <button class="ghost-btn" id="backupBtn" type="button">数据备份</button>
+  </div>
+
+  <p class="tip">数据只存在这台设备里<br>记得偶尔导出一份备份</p>
 </div>
 
 <!-- 新增 / 修改习惯 -->
@@ -427,7 +544,8 @@
     <label class="field-label">多久一次</label>
     <div class="freq-row">
       <button class="freq-btn" id="freqDaily" type="button" data-freq="daily">每天</button>
-      <button class="freq-btn" id="freqWeekly" type="button" data-freq="weekly">每周</button>
+      <button class="freq-btn" id="freqWeekly" type="button" data-freq="weekly">每周 N 次</button>
+      <button class="freq-btn" id="freqCycle" type="button" data-freq="cycle">练 X 休 Y</button>
     </div>
     <div class="times-row" id="timesRow" hidden>
       <span>每周</span>
@@ -435,6 +553,16 @@
       <span class="times-num" id="timesNum">3</span>
       <span>次</span>
       <button class="times-btn" id="plusTimes" type="button" aria-label="增加">＋</button>
+    </div>
+    <div class="times-row" id="cycleRow" hidden>
+      <span>练</span>
+      <button class="times-btn" id="minusWork" type="button" aria-label="减少">−</button>
+      <span class="times-num" id="workNum">3</span>
+      <span>天，休</span>
+      <button class="times-btn" id="minusRest" type="button" aria-label="减少">−</button>
+      <span class="times-num" id="restNum">1</span>
+      <span>天</span>
+      <button class="times-btn" id="plusRest" type="button" aria-label="增加">＋</button>
     </div>
   </div>
 
@@ -465,6 +593,42 @@
   </div>
 </div>
 
+<!-- 某一天 -->
+<div class="mask" id="dayMask"></div>
+<div class="sheet" id="daySheet" role="dialog" aria-modal="true" aria-labelledby="dayTitle">
+  <div class="sheet-head">
+    <span class="sheet-title" id="dayTitle">11月14日</span>
+    <button class="sheet-close" id="dayClose" type="button" aria-label="关闭">✕</button>
+  </div>
+  <p class="day-status" id="dayStatus"></p>
+  <div id="dayTimeWrap" hidden>
+    <div class="time-big"><span id="dayTimeBig">0</span><small>分钟</small></div>
+    <div class="quick-row">
+      <button class="quick-btn" type="button" data-dadd="15">+15</button>
+      <button class="quick-btn" type="button" data-dadd="30">+30</button>
+      <button class="quick-btn" type="button" data-dadd="45">+45</button>
+      <button class="quick-btn" type="button" data-dadd="0" id="dayClear">清零</button>
+    </div>
+  </div>
+  <div class="day-actions" id="dayActions"></div>
+</div>
+
+<!-- 备份 -->
+<div class="mask" id="backupMask"></div>
+<div class="sheet" id="backupSheet" role="dialog" aria-modal="true" aria-labelledby="backupTitle">
+  <div class="sheet-head">
+    <span class="sheet-title" id="backupTitle">数据备份</span>
+    <button class="sheet-close" id="backupClose" type="button" aria-label="关闭">✕</button>
+  </div>
+  <p class="hint" style="text-align:left;margin:8px 0 0;">备份文件里是你所有的习惯和打卡记录。换手机、清缓存前先导出一份，用「导入」能原样恢复。</p>
+  <div class="sheet-actions">
+    <button class="btn-soft" id="exportBtn" type="button">导出备份</button>
+    <button class="btn-soft" id="importBtn" type="button">导入备份</button>
+  </div>
+  <input type="file" id="importFile" accept=".json,application/json" style="display:none">
+  <p class="hint" id="backupHint"></p>
+</div>
+
 <script>
 (function(){
   'use strict';
@@ -490,6 +654,10 @@
   /* ---------- 日期小工具 ---------- */
   function pad(n){ return n < 10 ? '0' + n : '' + n; }
   function dayKey(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+  function parseKey(k){
+    var p = String(k).split('-');
+    return new Date(parseInt(p[0],10), parseInt(p[1],10)-1, parseInt(p[2],10));
+  }
   function startOfDay(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
   function addDays(d, n){
     var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -510,10 +678,14 @@
     if (isNaN(v)) v = lo;
     return Math.max(lo, Math.min(hi, v));
   }
+  function diffDays(a, b){
+    return Math.round((startOfDay(b) - startOfDay(a)) / 86400000);
+  }
 
   /* ---------- 数据 ---------- */
   function defaultState(){
     return {
+      startedAt: dayKey(new Date()),
       habits: [
         { id:'h_word', name:'背单词',       icon:'book',     type:'check', freq:{type:'daily'}, done:{} },
         { id:'h_move', name:'运动 20 分钟', icon:'dumbbell', type:'check', freq:{type:'daily'}, done:{} },
@@ -535,6 +707,7 @@
   for (var mi = 0; mi < state.habits.length; mi++) {
     var mh = state.habits[mi];
     if (!mh.done || typeof mh.done !== 'object') mh.done = {};
+    if (!mh.rest || typeof mh.rest !== 'object') mh.rest = {};
     if (!mh.type) mh.type = 'check';
     if (mh.type === 'time') {
       if (!mh.log || typeof mh.log !== 'object') mh.log = {};
@@ -547,10 +720,15 @@
       if (!mh.freq || !mh.freq.type) mh.freq = { type:'daily' };
       if (mh.freq.type === 'weekly') {
         mh.freq.times = clampNum(mh.freq.times || 3, 1, 7);
+      } else if (mh.freq.type === 'cycle') {
+        mh.freq.work = clampNum(mh.freq.work || 3, 1, 14);
+        mh.freq.rest = clampNum(mh.freq.rest || 1, 1, 14);
+        if (!mh.freq.start) mh.freq.start = dayKey(new Date());
       }
     }
     if (!ICONS[mh.icon]) mh.icon = 'book';
   }
+  if (!state.startedAt) state.startedAt = dayKey(new Date());
 
   function save(){
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
@@ -562,6 +740,7 @@
 
   /* ---------- 元素 ---------- */
   var today = new Date();
+  var todayKey = dayKey(today);
   var elDateMain = document.getElementById('dateMain');
   var elDateSub  = document.getElementById('dateSub');
   var elList     = document.getElementById('habitList');
@@ -584,10 +763,17 @@
   var elFreqConfig = document.getElementById('freqConfig');
   var elFreqDaily  = document.getElementById('freqDaily');
   var elFreqWeekly = document.getElementById('freqWeekly');
+  var elFreqCycle  = document.getElementById('freqCycle');
   var elTimesRow   = document.getElementById('timesRow');
   var elTimesNum   = document.getElementById('timesNum');
   var elMinusTimes = document.getElementById('minusTimes');
   var elPlusTimes  = document.getElementById('plusTimes');
+  var elCycleRow   = document.getElementById('cycleRow');
+  var elWorkNum    = document.getElementById('workNum');
+  var elRestNum    = document.getElementById('restNum');
+  var elMinusWork  = document.getElementById('minusWork');
+  var elMinusRest  = document.getElementById('minusRest');
+  var elPlusRest   = document.getElementById('plusRest');
   var elSaveHabit  = document.getElementById('saveHabit');
   var elDeleteHabit = document.getElementById('deleteHabit');
 
@@ -601,6 +787,31 @@
   var elSaveTime   = document.getElementById('saveTime');
   var elQuickClear = document.getElementById('quickClear');
 
+  var elDayMask    = document.getElementById('dayMask');
+  var elDaySheet   = document.getElementById('daySheet');
+  var elDayTitle   = document.getElementById('dayTitle');
+  var elDayClose   = document.getElementById('dayClose');
+  var elDayStatus  = document.getElementById('dayStatus');
+  var elDayActions = document.getElementById('dayActions');
+  var elDayTimeWrap = document.getElementById('dayTimeWrap');
+  var elDayTimeBig  = document.getElementById('dayTimeBig');
+  var elDayClear    = document.getElementById('dayClear');
+
+  var elWallTabs   = document.getElementById('wallTabs');
+  var elWallScroll = document.getElementById('wallScroll');
+  var elWallGrid   = document.getElementById('wallGrid');
+  var elStats      = document.getElementById('stats');
+  var elWallSection = document.getElementById('wallSection');
+
+  var elBackupBtn  = document.getElementById('backupBtn');
+  var elBackupMask = document.getElementById('backupMask');
+  var elBackupSheet = document.getElementById('backupSheet');
+  var elBackupClose = document.getElementById('backupClose');
+  var elExportBtn  = document.getElementById('exportBtn');
+  var elImportBtn  = document.getElementById('importBtn');
+  var elImportFile = document.getElementById('importFile');
+  var elBackupHint = document.getElementById('backupHint');
+
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, function(c){
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
@@ -608,28 +819,87 @@
   }
 
   /* ---------- 判定 ---------- */
-  function isSuccess(h, key){
-    if (h.type === 'time') {
-      if (h.makeup && h.makeup[key]) return true;
-      var m = (h.log && h.log[key]) || 0;
-      return m >= h.target;
+  /* 循环习惯：从 start 那天起，练 work 天休 rest 天 */
+  function isRestDay(h, key){
+    if (h.rest && h.rest[key]) return true;
+    if (h.freq && h.freq.type === 'cycle') {
+      var startK = h.freq.start || state.startedAt;
+      var diff = diffDays(parseKey(startK), parseKey(key));
+      if (diff < 0) return false;
+      var len = h.freq.work + h.freq.rest;
+      if (len <= 0) return false;
+      return (diff % len) >= h.freq.work;
     }
-    return !!(h.done && h.done[key]);
+    return false;
   }
 
   function minutesOf(h, key){
     return (h.log && h.log[key]) || 0;
   }
 
-  /* ---------- 连续天数 / 每周进度 ---------- */
+  function isSuccess(h, key){
+    if (isRestDay(h, key)) return true;
+    if (h.type === 'time') {
+      if (h.makeup && h.makeup[key]) return true;
+      return minutesOf(h, key) >= h.target;
+    }
+    return !!(h.done && h.done[key]);
+  }
+
+  function cyclePosition(h, key){
+    if (!h.freq || h.freq.type !== 'cycle') return null;
+    var startK = h.freq.start || state.startedAt;
+    var diff = diffDays(parseKey(startK), parseKey(key));
+    if (diff < 0) return null;
+    var len = h.freq.work + h.freq.rest;
+    var pos = diff % len;
+    return { pos: pos + 1, work: h.freq.work, rest: h.freq.rest, len: len, isRest: pos >= h.freq.work };
+  }
+
+  /* ---------- 连续 / 统计 ---------- */
   function streakOf(h){
     var cursor = startOfDay(today);
-    if (!isSuccess(h, dayKey(cursor))) cursor = addDays(cursor, -1);
+    var key = dayKey(cursor);
+    if (!isSuccess(h, key) && !isRestDay(h, key)) cursor = addDays(cursor, -1);
     var n = 0;
     while (isSuccess(h, dayKey(cursor))) {
       n++;
       cursor = addDays(cursor, -1);
       if (n > 3650) break;
+    }
+    return n;
+  }
+
+  function longestStreak(h){
+    var keys = allRecordKeys(h);
+    if (!keys.length) return 0;
+    keys.sort();
+    var best = 0, cur = 0, prev = null;
+    for (var i = 0; i < keys.length; i++) {
+      var d = parseKey(keys[i]);
+      if (prev && diffDays(prev, d) === 1) cur++;
+      else cur = 1;
+      if (cur > best) best = cur;
+      prev = d;
+    }
+    return best;
+  }
+
+  function allRecordKeys(h){
+    var set = {};
+    var k;
+    if (h.done) for (k in h.done) if (h.done[k]) set[k] = 1;
+    if (h.log) for (k in h.log) if (h.log[k]) set[k] = 1;
+    if (h.makeup) for (k in h.makeup) if (h.makeup[k]) set[k] = 1;
+    if (h.rest) for (k in h.rest) if (h.rest[k]) set[k] = 1;
+    return Object.keys(set);
+  }
+
+  function totalSuccessDays(h){
+    var n = 0;
+    var keys = allRecordKeys(h);
+    for (var i = 0; i < keys.length; i++) {
+      if (isSuccess(h, keys[i])) n++;
     }
     return n;
   }
@@ -655,11 +925,29 @@
     return n;
   }
 
+  function weekAverage(h){
+    var ws = startOfWeek(today);
+    var days = diffDays(ws, today) + 1;
+    var sum = 0;
+    for (var i = 0; i < days; i++) {
+      sum += minutesOf(h, dayKey(addDays(ws, i)));
+    }
+    return days > 0 ? Math.round(sum / days) : 0;
+  }
+
+  function totalAverage(h){
+    var startD = parseKey(state.startedAt || todayKey);
+    var days = diffDays(startD, today) + 1;
+    if (days <= 0) days = 1;
+    var sum = 0;
+    if (h.log) for (var k in h.log) sum += h.log[k];
+    return Math.round(sum / days);
+  }
+
   function metaText(h){
     if (h.type === 'time') {
-      var key = dayKey(today);
-      var m = minutesOf(h, key);
-      var done = isSuccess(h, key);
+      var m = minutesOf(h, todayKey);
+      var done = isSuccess(h, todayKey);
       var parts = [];
       if (done && m >= h.target) parts.push('今天 ' + m + ' 分钟 · 达标');
       else if (done) parts.push('今天已补卡');
@@ -677,17 +965,42 @@
       if (ws > 0) txt += ' · 连续 ' + ws + ' 周';
       return txt;
     }
-    var doneToday = isSuccess(h, dayKey(today));
-    var streak = streakOf(h);
-    if (streak > 0) return '连续 ' + streak + ' 天' + (doneToday ? '' : ' · 今天还没打');
+    if (h.freq.type === 'cycle') {
+      var cp = cyclePosition(h, todayKey);
+      var streak = streakOf(h);
+      if (cp) {
+        var head = cp.isRest
+          ? '今天休息 · 第 ' + cp.pos + '/' + cp.len + ' 天'
+          : '今天该练 · 第 ' + cp.pos + '/' + cp.work + ' 天';
+        return head + (streak > 0 ? ' · 连续 ' + streak + ' 天' : '');
+      }
+      return '还没开始';
+    }
+    var doneToday = isSuccess(h, todayKey);
+    var st = streakOf(h);
+    if (st > 0) return '连续 ' + st + ' 天' + (doneToday ? '' : ' · 今天还没打');
     return '今天还没动';
   }
 
-  /* ---------- 补卡 ---------- */
-  /* 今天学习量超过补卡门槛 bonus，才能补昨天/前天（且那两天有记录但没达标） */
+  /* ---------- 渲染 ---------- */
+  function renderDate(){
+    elDateMain.textContent = (today.getMonth()+1) + '月' + today.getDate() + '日';
+    elDateSub.textContent = today.getFullYear() + ' · ' + WEEKDAYS[today.getDay()];
+  }
+
+  function habitRight(h, done, rest){
+    if (h.type === 'time') {
+      var m = minutesOf(h, todayKey);
+      return '<span class="time-badge' + (done ? ' on' : '') + '">'
+           + (m > 0 ? m : '—')
+           + '<small>分</small></span>';
+    }
+    return '<span class="check">' + TICK_ICON + '</span>';
+  }
+
   function makeupCandidates(h){
     if (h.type !== 'time') return [];
-    if (minutesOf(h, dayKey(today)) < h.bonus) return [];
+    if (minutesOf(h, todayKey) < h.bonus) return [];
     var out = [];
     for (var off = 1; off <= 2; off++) {
       var k = dayKey(addDays(today, -off));
@@ -698,22 +1011,6 @@
     return out;
   }
 
-  /* ---------- 渲染 ---------- */
-  function renderDate(){
-    elDateMain.textContent = (today.getMonth()+1) + '月' + today.getDate() + '日';
-    elDateSub.textContent = today.getFullYear() + ' · ' + WEEKDAYS[today.getDay()];
-  }
-
-  function habitRight(h, done){
-    if (h.type === 'time') {
-      var m = minutesOf(h, dayKey(today));
-      return '<span class="time-badge' + (done ? ' on' : '') + '">'
-           + (m > 0 ? m : '—')
-           + '<small>分</small></span>';
-    }
-    return '<span class="check">' + TICK_ICON + '</span>';
-  }
-
   function renderHabits(){
     var html = '';
     if (!state.habits.length) {
@@ -721,8 +1018,9 @@
     }
     for (var i = 0; i < state.habits.length; i++) {
       var h = state.habits[i];
-      var done = isSuccess(h, dayKey(today));
-      html += '<div class="habit' + (done ? ' done' : '') + '" role="button" tabindex="0"'
+      var done = isSuccess(h, todayKey);
+      var rest = isRestDay(h, todayKey);
+      html += '<div class="habit' + (done ? ' done' : '') + (rest ? ' is-rest' : '') + '" role="button" tabindex="0"'
             + ' data-id="' + escapeHtml(h.id) + '"'
             + ' aria-pressed="' + (done ? 'true' : 'false') + '">'
             + '<span class="habit-icon">' + (ICONS[h.icon] || ICONS.book) + '</span>'
@@ -731,7 +1029,7 @@
             +   '<span class="habit-streak">' + escapeHtml(metaText(h)) + '</span>'
             + '</span>'
             + '<button class="habit-edit" type="button" aria-label="修改这个习惯">' + EDIT_ICON + '</button>'
-            + habitRight(h, done)
+            + habitRight(h, done, rest)
             + '</div>';
 
       var cands = makeupCandidates(h);
@@ -752,10 +1050,9 @@
 
   function renderToday(){
     var total = state.habits.length;
-    var key = dayKey(today);
     var doneCount = 0;
     for (var i = 0; i < total; i++) {
-      if (isSuccess(state.habits[i], key)) doneCount++;
+      if (isSuccess(state.habits[i], todayKey)) doneCount++;
     }
     elDone.textContent = doneCount;
     elTotal.textContent = '/' + total;
@@ -775,39 +1072,35 @@
   }
 
   function dayRolled(){
-    if (dayKey(new Date()) !== dayKey(today)) {
+    if (dayKey(new Date()) !== todayKey) {
       location.reload();
       return true;
     }
     return false;
   }
 
-  /* ---------- 打卡（打勾型） ---------- */
+  /* ---------- 打卡 ---------- */
   function toggleHabit(card){
     if (dayRolled()) return;
     var h = findHabit(card.getAttribute('data-id'));
     if (!h || h.type === 'time') return;
-
-    var key = dayKey(today);
-    var nowDone = !isSuccess(h, key);
-    if (nowDone) h.done[key] = true;
-    else delete h.done[key];
+    var nowDone = !isSuccess(h, todayKey);
+    if (nowDone) h.done[todayKey] = true;
+    else delete h.done[todayKey];
     save();
-
     renderHabits();
     renderToday();
-
+    renderWall();
     if (nowDone) {
-      var card2 = elList.querySelector('.habit[data-id="' + h.id + '"] .check');
-      if (card2) {
-        card2.classList.remove('tick');
-        void card2.offsetWidth;
-        card2.classList.add('tick');
+      var check = elList.querySelector('.habit[data-id="' + h.id + '"] .check');
+      if (check) {
+        check.classList.remove('tick');
+        void check.offsetWidth;
+        check.classList.add('tick');
       }
     }
   }
 
-  /* ---------- 补卡动作 ---------- */
   function doMakeup(id, key){
     if (dayRolled()) return;
     var h = findHabit(id);
@@ -817,17 +1110,181 @@
     save();
     renderHabits();
     renderToday();
+    renderWall();
   }
 
+  /* ---------- 打卡墙 ---------- */
+  var wallHabitId = null;
+
+  function renderWallTabs(){
+    if (!state.habits.length) {
+      elWallTabs.innerHTML = '';
+      elWallSection.hidden = true;
+      return;
+    }
+    elWallSection.hidden = false;
+    if (!wallHabitId || !findHabit(wallHabitId)) wallHabitId = state.habits[0].id;
+    var html = '';
+    for (var i = 0; i < state.habits.length; i++) {
+      var h = state.habits[i];
+      html += '<button class="wall-tab' + (h.id === wallHabitId ? ' on' : '') + '" type="button"'
+            + ' data-id="' + escapeHtml(h.id) + '">' + escapeHtml(h.name) + '</button>';
+    }
+    elWallTabs.innerHTML = html;
+  }
+
+  function renderWall(){
+    renderWallTabs();
+    var h = findHabit(wallHabitId);
+    if (!h) { elWallGrid.innerHTML = ''; elStats.innerHTML = ''; return; }
+
+    /* 最近 53 周（对齐到周一），从旧到新 */
+    var end = startOfDay(today);
+    var start = addDays(end, -370);
+    while (start.getDay() !== 1) start = addDays(start, -1);
+
+    var cells = [];
+    var d = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    while (d <= end) {
+      var k = dayKey(d);
+      var cls = '';
+      if (diffDays(today, d) > 0) cls = 'future';
+      else if (isRestDay(h, k)) cls = 'rest';
+      else if (h.type === 'time') {
+        if (h.makeup && h.makeup[k]) cls = 'makeup';
+        else if (minutesOf(h, k) >= h.target) cls = 'ok';
+        else if (minutesOf(h, k) > 0) cls = 'part';
+      } else {
+        if (h.done && h.done[k]) cls = 'ok';
+      }
+      cells.push('<span class="wcell ' + cls + '" data-day="' + k + '"></span>');
+      d = addDays(d, 1);
+    }
+    elWallGrid.innerHTML = cells.join('');
+    /* 默认滚到最近 */
+    elWallScroll.scrollLeft = elWallScroll.scrollWidth;
+
+    renderStats(h);
+  }
+
+  function renderStats(h){
+    var html = '';
+    if (h.type === 'time') {
+      html += '<div class="stat-line"><span>今天</span><b>' + minutesOf(h, todayKey) + ' 分钟' + (isSuccess(h, todayKey) ? ' · 达标' : '') + '</b></div>';
+      html += '<div class="stat-line"><span>本周平均</span><b>' + weekAverage(h) + ' 分钟</b></div>';
+      html += '<div class="stat-line"><span>总平均（每天算）</span><b>' + totalAverage(h) + ' 分钟</b></div>';
+    }
+    html += '<div class="stat-line"><span>当前连续</span><b>' + streakOf(h) + ' 天</b></div>';
+    html += '<div class="stat-line"><span>最长连续</span><b>' + longestStreak(h) + ' 天</b></div>';
+    html += '<div class="stat-line"><span>累计打卡</span><b>' + totalSuccessDays(h) + ' 天</b></div>';
+    if (h.freq.type === 'weekly') {
+      html += '<div class="stat-line"><span>本周目标</span><b>' + weekDoneCount(h, startOfWeek(today)) + '/' + h.freq.times + ' 次</b></div>';
+    }
+    if (h.freq.type === 'cycle') {
+      html += '<div class="stat-line"><span>循环</span><b>练 ' + h.freq.work + ' 休 ' + h.freq.rest + '</b></div>';
+    }
+    elStats.innerHTML = html;
+  }
+
+  /* ---------- 某一天弹层 ---------- */
+  var dayEditHabitId = null;
+  var dayEditKey = null;
+
+  function openDaySheet(h, key){
+    dayEditHabitId = h.id;
+    dayEditKey = key;
+    var d = parseKey(key);
+    elDayTitle.textContent = shortDay(key) + ' · ' + WEEKDAYS[d.getDay()];
+    var rest = isRestDay(h, key);
+    var done = isSuccess(h, key);
+    var status = '';
+    if (rest) status = '这天是休息日';
+    else if (h.type === 'time') {
+      var m = minutesOf(h, key);
+      status = m > 0 ? '记录 ' + m + ' 分钟' + (m >= h.target ? '（达标）' : '（没到 ' + h.target + ' 分钟）') : '这天没记录';
+    } else {
+      status = done ? '这天打了卡' : '这天没打卡';
+    }
+    elDayStatus.textContent = status;
+
+    var dayTimeBig = document.getElementById('dayTimeBig');
+    if (h.type === 'time') {
+      elDayTimeWrap.hidden = false;
+      dayTimeBig.textContent = minutesOf(h, key);
+    } else {
+      elDayTimeWrap.hidden = true;
+    }
+
+    var actions = '';
+    if (h.type === 'check') {
+      actions += '<button class="btn-soft' + (done && !rest ? ' on' : '') + '" type="button" id="dayToggle">' + (done && !rest ? '取消打卡' : '补打卡') + '</button>';
+    } else {
+      actions += '<button class="btn-soft" type="button" id="daySaveTime">保存分钟数</button>';
+    }
+    actions += '<button class="btn-soft' + (rest ? ' on' : '') + '" type="button" id="dayToggleRest">' + (rest ? '取消休息日' : '设为休息日') + '</button>';
+
+    var canMakeup = h.type === 'time' && (h.makeup && h.makeup[key]);
+    if (canMakeup) {
+      actions += '<button class="btn-soft" type="button" id="dayUndoMakeup">取消补卡标记</button>';
+    }
+    elDayActions.innerHTML = actions;
+
+    var t = document.getElementById('dayToggle');
+    if (t) {
+      t.addEventListener('click', function(){
+        if (h.done[key]) delete h.done[key];
+        else h.done[key] = true;
+        save(); refreshAll(); openDaySheet(h, key);
+      });
+    }
+    var tr = document.getElementById('dayToggleRest');
+    if (tr) {
+      tr.addEventListener('click', function(){
+        if (h.rest[key]) delete h.rest[key];
+        else h.rest[key] = true;
+        save(); refreshAll(); openDaySheet(h, key);
+      });
+    }
+    var st = document.getElementById('daySaveTime');
+    if (st) {
+      st.addEventListener('click', function(){
+        var v = clampNum(document.getElementById('dayTimeBig').textContent, 0, 1440);
+        if (v > 0) h.log[key] = v; else delete h.log[key];
+        save(); refreshAll(); openDaySheet(h, key);
+      });
+    }
+    var um = document.getElementById('dayUndoMakeup');
+    if (um) {
+      um.addEventListener('click', function(){
+        delete h.makeup[key];
+        save(); refreshAll(); openDaySheet(h, key);
+      });
+    }
+
+    elDayMask.classList.add('show');
+    elDaySheet.classList.add('show');
+  }
+
+  function closeDaySheet(){
+    elDayMask.classList.remove('show');
+    elDaySheet.classList.remove('show');
+  }
+
+  /* ---------- 刷新 ---------- */
+  function refreshAll(){
+    renderHabits();
+    renderToday();
+    renderWall();
+  }
+
+  /* ---------- 事件：列表 ---------- */
   elList.addEventListener('click', function(e){
     var t = e.target;
-
     var makeupBtn = t.closest ? t.closest('.makeup-btn') : null;
     if (makeupBtn) {
       doMakeup(makeupBtn.getAttribute('data-id'), makeupBtn.getAttribute('data-day'));
       return;
     }
-
     var editBtn = t.closest ? t.closest('.habit-edit') : null;
     if (editBtn) {
       var card = editBtn.closest('.habit');
@@ -835,16 +1292,12 @@
       if (h) openSheet(h);
       return;
     }
-
     var card2 = t.closest ? t.closest('.habit') : null;
     if (!card2) return;
     var habit = findHabit(card2.getAttribute('data-id'));
     if (!habit) return;
-    if (habit.type === 'time') {
-      openTimeSheet(habit);
-    } else {
-      toggleHabit(card2);
-    }
+    if (habit.type === 'time') openTimeSheet(habit);
+    else toggleHabit(card2);
   });
 
   elList.addEventListener('keydown', function(e){
@@ -855,12 +1308,32 @@
     toggleHabit(card);
   });
 
-  /* ---------- 弹层：新增 / 修改 ---------- */
+  /* ---------- 事件：墙 ---------- */
+  elWallTabs.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('.wall-tab') : null;
+    if (!b) return;
+    wallHabitId = b.getAttribute('data-id');
+    renderWall();
+  });
+
+  elWallGrid.addEventListener('click', function(e){
+    var c = e.target.closest ? e.target.closest('.wcell') : null;
+    if (!c) return;
+    var key = c.getAttribute('data-day');
+    if (diffDays(today, parseKey(key)) > 0) return; /* 未来的格子不响应 */
+    var h = findHabit(wallHabitId);
+    if (!h) return;
+    openDaySheet(h, key);
+  });
+
+  /* ---------- 事件：新增/修改表单 ---------- */
   var editingId = null;
   var formIcon = 'book';
   var formType = 'check';
   var formFreq = 'daily';
   var formTimes = 3;
+  var formWork = 3;
+  var formRest = 1;
 
   function renderIconRow(){
     var html = '';
@@ -882,16 +1355,22 @@
   function renderFreqUI(){
     elFreqDaily.classList.toggle('on', formFreq === 'daily');
     elFreqWeekly.classList.toggle('on', formFreq === 'weekly');
+    elFreqCycle.classList.toggle('on', formFreq === 'cycle');
     elTimesRow.hidden = formFreq !== 'weekly';
+    elCycleRow.hidden = formFreq !== 'cycle';
     elTimesNum.textContent = formTimes;
+    elWorkNum.textContent = formWork;
+    elRestNum.textContent = formRest;
   }
 
   function openSheet(h){
     editingId = h ? h.id : null;
     formIcon = h ? (ICONS[h.icon] ? h.icon : 'book') : 'book';
     formType = h ? h.type : 'check';
-    formFreq = h && h.freq.type === 'weekly' ? 'weekly' : 'daily';
+    formFreq = h && h.freq && h.freq.type ? h.freq.type : 'daily';
     formTimes = h && h.freq.type === 'weekly' ? h.freq.times : 3;
+    formWork = h && h.freq.type === 'cycle' ? h.freq.work : 3;
+    formRest = h && h.freq.type === 'cycle' ? h.freq.rest : 1;
 
     elSheetTitle.textContent = h ? '改习惯' : '新习惯';
     elNameInput.value = h ? h.name : '';
@@ -928,19 +1407,14 @@
   elTypeTime.addEventListener('click', function(){ formType = 'time'; renderTypeUI(); });
 
   elFreqDaily.addEventListener('click', function(){ formFreq = 'daily'; renderFreqUI(); });
-  elFreqWeekly.addEventListener('click', function(){
-    formFreq = 'weekly';
-    if (formTimes < 1) formTimes = 3;
-    renderFreqUI();
-  });
-  elMinusTimes.addEventListener('click', function(){
-    formTimes = Math.max(1, formTimes - 1);
-    elTimesNum.textContent = formTimes;
-  });
-  elPlusTimes.addEventListener('click', function(){
-    formTimes = Math.min(7, formTimes + 1);
-    elTimesNum.textContent = formTimes;
-  });
+  elFreqWeekly.addEventListener('click', function(){ formFreq = 'weekly'; renderFreqUI(); });
+  elFreqCycle.addEventListener('click', function(){ formFreq = 'cycle'; renderFreqUI(); });
+
+  elMinusTimes.addEventListener('click', function(){ formTimes = Math.max(1, formTimes-1); renderFreqUI(); });
+  elPlusTimes.addEventListener('click', function(){ formTimes = Math.min(7, formTimes+1); renderFreqUI(); });
+  elMinusWork.addEventListener('click', function(){ formWork = Math.max(1, formWork-1); renderFreqUI(); });
+  elMinusRest.addEventListener('click', function(){ formRest = Math.max(1, formRest-1); renderFreqUI(); });
+  elPlusRest.addEventListener('click', function(){ formRest = Math.min(14, formRest+1); renderFreqUI(); });
 
   elSaveHabit.addEventListener('click', function(){
     var name = elNameInput.value.trim();
@@ -950,53 +1424,37 @@
       setTimeout(function(){ elNameInput.style.borderColor = ''; }, 1200);
       return;
     }
-
-    var h;
-    if (editingId) {
-      h = findHabit(editingId);
-      if (!h) return;
-      h.name = name;
-      h.icon = formIcon;
-      h.type = formType;
-      if (formType === 'time') {
-        h.target = clampNum(elTargetInput.value, 1, 1440);
-        h.bonus = clampNum(elBonusInput.value, 1, 1440);
-        if (h.bonus <= h.target) h.bonus = h.target + 30;
-        h.freq = { type:'daily' };
-        if (!h.log) h.log = {};
-        if (!h.makeup) h.makeup = {};
-      } else {
-        h.freq = formFreq === 'weekly'
-          ? { type:'weekly', times: formTimes }
-          : { type:'daily' };
-        if (!h.done) h.done = {};
-      }
-    } else {
-      h = {
-        id: genId(),
-        name: name,
-        icon: formIcon,
-        type: formType,
-        done: {},
-        freq: { type:'daily' }
-      };
-      if (formType === 'time') {
-        h.target = clampNum(elTargetInput.value, 1, 1440);
-        h.bonus = clampNum(elBonusInput.value, 1, 1440);
-        if (h.bonus <= h.target) h.bonus = h.target + 30;
-        h.log = {};
-        h.makeup = {};
-      } else {
-        h.freq = formFreq === 'weekly'
-          ? { type:'weekly', times: formTimes }
-          : { type:'daily' };
-      }
+    var h = editingId ? findHabit(editingId) : null;
+    if (!h) {
+      h = { id: genId(), name: name, icon: formIcon, type: formType, done:{}, rest:{}, freq:{type:'daily'} };
       state.habits.push(h);
+    }
+    h.name = name;
+    h.icon = formIcon;
+    h.type = formType;
+
+    if (formType === 'time') {
+      h.target = clampNum(elTargetInput.value, 1, 1440);
+      h.bonus = clampNum(elBonusInput.value, 1, 1440);
+      if (h.bonus <= h.target) h.bonus = h.target + 30;
+      h.freq = { type:'daily' };
+      if (!h.log) h.log = {};
+      if (!h.makeup) h.makeup = {};
+    } else {
+      if (formFreq === 'weekly') h.freq = { type:'weekly', times: formTimes };
+      else if (formFreq === 'cycle') {
+        h.freq = {
+          type:'cycle',
+          work: formWork,
+          rest: formRest,
+          start: (h.freq && h.freq.type === 'cycle' && h.freq.start) ? h.freq.start : todayKey
+        };
+      } else h.freq = { type:'daily' };
+      if (!h.done) h.done = {};
     }
 
     save();
-    renderHabits();
-    renderToday();
+    refreshAll();
     closeSheet();
   });
 
@@ -1008,15 +1466,16 @@
       if (state.habits[i].id !== editingId) next.push(state.habits[i]);
     }
     state.habits = next;
+    if (wallHabitId === editingId) wallHabitId = null;
     save();
-    renderHabits();
-    renderToday();
+    refreshAll();
     closeSheet();
   });
 
-  /* ---------- 弹层：记时长 ---------- */
+  /* ---------- 事件：记时长 ---------- */
   var timeEditingId = null;
   var timeMinutes = 0;
+  var timeTargetKey = todayKey;
 
   function syncTimeUI(){
     elTimeBig.textContent = timeMinutes;
@@ -1036,7 +1495,8 @@
 
   function openTimeSheet(h){
     timeEditingId = h.id;
-    timeMinutes = minutesOf(h, dayKey(today));
+    timeTargetKey = todayKey;
+    timeMinutes = minutesOf(h, todayKey);
     elTimeSheetTitle.textContent = '记「' + h.name + '」';
     syncTimeUI();
     refreshHint();
@@ -1073,19 +1533,98 @@
     if (!timeEditingId) return;
     var h = findHabit(timeEditingId);
     if (!h) return;
-    var key = dayKey(today);
-    if (timeMinutes > 0) h.log[key] = timeMinutes;
-    else delete h.log[key];
+    if (timeMinutes > 0) h.log[todayKey] = timeMinutes;
+    else delete h.log[todayKey];
     save();
-    renderHabits();
-    renderToday();
+    refreshAll();
     closeTimeSheet();
+  });
+
+  /* ---------- 事件：某一天 ---------- */
+  var dayQuickBtns = document.querySelectorAll('[data-dadd]');
+  for (var db = 0; db < dayQuickBtns.length; db++) {
+    dayQuickBtns[db].addEventListener('click', function(){
+      var add = parseInt(this.getAttribute('data-dadd'), 10) || 0;
+      var big = document.getElementById('dayTimeBig');
+      var v = clampNum(big.textContent, 0, 1440) + add;
+      big.textContent = Math.max(0, Math.min(1440, v));
+    });
+  }
+  elDayClear.addEventListener('click', function(){
+    document.getElementById('dayTimeBig').textContent = 0;
+  });
+  elDayClose.addEventListener('click', closeDaySheet);
+  elDayMask.addEventListener('click', closeDaySheet);
+
+  /* ---------- 事件：备份 ---------- */
+  elBackupBtn.addEventListener('click', function(){
+    elBackupHint.textContent = '';
+    elBackupMask.classList.add('show');
+    elBackupSheet.classList.add('show');
+  });
+  elBackupClose.addEventListener('click', function(){
+    elBackupMask.classList.remove('show');
+    elBackupSheet.classList.remove('show');
+  });
+  elBackupMask.addEventListener('click', function(){
+    elBackupMask.classList.remove('show');
+    elBackupSheet.classList.remove('show');
+  });
+
+  elExportBtn.addEventListener('click', function(){
+    var data = JSON.stringify(state, null, 2);
+    var blob = new Blob([data], {type: 'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '像素习惯备份-' + todayKey + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
+    elBackupHint.textContent = '已导出，去手机「文件」App 里找找';
+  });
+
+  elImportBtn.addEventListener('click', function(){ elImportFile.click(); });
+
+  elImportFile.addEventListener('change', function(){
+    var f = elImportFile.files && elImportFile.files[0];
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try {
+        var obj = JSON.parse(reader.result);
+        if (!obj || !Array.isArray(obj.habits)) throw new Error('bad');
+        if (!window.confirm('导入会覆盖现在手机里的记录，确定吗？')) return;
+        state = obj;
+        /* 再走一遍补字段 */
+        for (var i = 0; i < state.habits.length; i++) {
+          var h = state.habits[i];
+          if (!h.done) h.done = {};
+          if (!h.rest) h.rest = {};
+          if (!h.type) h.type = 'check';
+          if (h.type === 'time') {
+            if (!h.log) h.log = {};
+            if (!h.makeup) h.makeup = {};
+          }
+        }
+        if (!state.startedAt) state.startedAt = todayKey;
+        save();
+        refreshAll();
+        elBackupHint.textContent = '导入成功，记录回来了';
+      } catch (err) {
+        elBackupHint.textContent = '这个文件读不出来，确认是备份文件吗';
+      }
+    };
+    reader.readAsText(f);
+    elImportFile.value = '';
   });
 
   /* ---------- 启动 ---------- */
   renderDate();
   renderHabits();
   renderToday();
+  renderWall();
 })();
 </script>
 </body>
