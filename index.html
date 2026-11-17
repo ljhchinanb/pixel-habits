@@ -25,6 +25,7 @@
     --danger:#B4534B;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  [hidden]{display:none !important;}
   html,body{margin:0;padding:0;}
   body{
     font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
@@ -495,7 +496,7 @@
         <span><i class="rest"></i>休息日</span>
         <span><i class="mk"></i>补卡</span>
       </div>
-      <p class="wall-hint">点格子能补签、改分钟数或标休息日</p>
+      <p class="wall-hint">点格子能补签、改分钟数 / 页数或标休息日</p>
     </div>
     <div class="stats" id="stats"></div>
   </section>
@@ -525,6 +526,7 @@
   <div class="type-row">
     <button class="type-btn" id="typeCheck" type="button" data-type="check">打勾</button>
     <button class="type-btn" id="typeTime" type="button" data-type="time">记时长</button>
+    <button class="type-btn" id="typePage" type="button" data-type="page">记页数</button>
   </div>
 
   <div id="timeConfig" hidden>
@@ -538,6 +540,20 @@
         <input class="num-input" id="bonusInput" type="number" inputmode="numeric" min="1" max="1440" value="60">
       </div>
     </div>
+  </div>
+
+  <div id="pageConfig" hidden>
+    <div class="threshold-row">
+      <div class="threshold-col">
+        <span>每天读超过（页）</span>
+        <input class="num-input" id="pageTargetInput" type="number" inputmode="numeric" min="1" max="99999" value="20">
+      </div>
+      <div class="threshold-col">
+        <span>补卡门槛（页）</span>
+        <input class="num-input" id="pageBonusInput" type="number" inputmode="numeric" min="1" max="99999" value="50">
+      </div>
+    </div>
+    <p class="hint" style="text-align:left;margin:10px 0 0;">记的是「读到第几页」，跟上次记的页数做差就是今天读的页数。没记的日子按 0 页算、页数接着上一天；比上次少就当成换新书。</p>
   </div>
 
   <div id="freqConfig">
@@ -593,6 +609,28 @@
   </div>
 </div>
 
+<!-- 记页数 -->
+<div class="mask" id="pageMask"></div>
+<div class="sheet" id="pageSheet" role="dialog" aria-modal="true" aria-labelledby="pageSheetTitle">
+  <div class="sheet-head">
+    <span class="sheet-title" id="pageSheetTitle">记今天</span>
+    <button class="sheet-close" id="pageSheetClose" type="button" aria-label="关闭">✕</button>
+  </div>
+  <p class="hint" id="pageHint" style="margin:6px 0 0;"></p>
+  <div class="time-big"><span id="pageBig">0</span><small>页</small></div>
+  <div class="quick-row">
+    <button class="quick-btn" type="button" data-padd="10">+10</button>
+    <button class="quick-btn" type="button" data-padd="20">+20</button>
+    <button class="quick-btn" type="button" data-padd="50">+50</button>
+    <button class="quick-btn" type="button" data-padd="0" id="pageClear">清零</button>
+  </div>
+  <input class="field-input" id="pageInput" type="number" inputmode="numeric" min="0" max="99999" placeholder="记到第几页">
+  <p class="hint" id="pageStatus"></p>
+  <div class="sheet-actions">
+    <button class="btn-primary" id="savePage" type="button">保存</button>
+  </div>
+</div>
+
 <!-- 某一天 -->
 <div class="mask" id="dayMask"></div>
 <div class="sheet" id="daySheet" role="dialog" aria-modal="true" aria-labelledby="dayTitle">
@@ -602,12 +640,18 @@
   </div>
   <p class="day-status" id="dayStatus"></p>
   <div id="dayTimeWrap" hidden>
-    <div class="time-big"><span id="dayTimeBig">0</span><small>分钟</small></div>
-    <div class="quick-row">
+    <div class="time-big"><span id="dayTimeBig">0</span><small id="dayUnit">分钟</small></div>
+    <div class="quick-row" id="dayQuickTime">
       <button class="quick-btn" type="button" data-dadd="15">+15</button>
       <button class="quick-btn" type="button" data-dadd="30">+30</button>
       <button class="quick-btn" type="button" data-dadd="45">+45</button>
-      <button class="quick-btn" type="button" data-dadd="0" id="dayClear">清零</button>
+      <button class="quick-btn day-clear" type="button" data-dadd="0">清零</button>
+    </div>
+    <div class="quick-row" id="dayQuickPage" hidden>
+      <button class="quick-btn" type="button" data-dadd="10">+10</button>
+      <button class="quick-btn" type="button" data-dadd="20">+20</button>
+      <button class="quick-btn" type="button" data-dadd="50">+50</button>
+      <button class="quick-btn day-clear" type="button" data-dadd="0">清零</button>
     </div>
   </div>
   <div class="day-actions" id="dayActions"></div>
@@ -703,9 +747,8 @@
   }
   if (!state || !Array.isArray(state.habits)) state = defaultState();
 
-  /* 老数据补字段 */
-  for (var mi = 0; mi < state.habits.length; mi++) {
-    var mh = state.habits[mi];
+  /* 老数据补字段 / 校验字段 */
+  function patchHabit(mh){
     if (!mh.done || typeof mh.done !== 'object') mh.done = {};
     if (!mh.rest || typeof mh.rest !== 'object') mh.rest = {};
     if (!mh.type) mh.type = 'check';
@@ -715,6 +758,13 @@
       mh.target = clampNum(mh.target || 30, 1, 1440);
       mh.bonus = clampNum(mh.bonus || 60, 1, 1440);
       if (mh.bonus <= mh.target) mh.bonus = mh.target + 30;
+      mh.freq = { type:'daily' };
+    } else if (mh.type === 'page') {
+      if (!mh.pages || typeof mh.pages !== 'object') mh.pages = {};
+      if (!mh.makeup || typeof mh.makeup !== 'object') mh.makeup = {};
+      mh.target = clampNum(mh.target || 20, 1, 99999);
+      mh.bonus = clampNum(mh.bonus || 50, 1, 99999);
+      if (mh.bonus <= mh.target) mh.bonus = mh.target + 10;
       mh.freq = { type:'daily' };
     } else {
       if (!mh.freq || !mh.freq.type) mh.freq = { type:'daily' };
@@ -727,6 +777,11 @@
       }
     }
     if (!ICONS[mh.icon]) mh.icon = 'book';
+    return mh;
+  }
+
+  for (var mi = 0; mi < state.habits.length; mi++) {
+    patchHabit(state.habits[mi]);
   }
   if (!state.startedAt) state.startedAt = dayKey(new Date());
 
@@ -757,9 +812,13 @@
   var elIconRow    = document.getElementById('iconRow');
   var elTypeCheck  = document.getElementById('typeCheck');
   var elTypeTime   = document.getElementById('typeTime');
+  var elTypePage   = document.getElementById('typePage');
   var elTimeConfig = document.getElementById('timeConfig');
   var elTargetInput = document.getElementById('targetInput');
   var elBonusInput  = document.getElementById('bonusInput');
+  var elPageConfig = document.getElementById('pageConfig');
+  var elPageTargetInput = document.getElementById('pageTargetInput');
+  var elPageBonusInput  = document.getElementById('pageBonusInput');
   var elFreqConfig = document.getElementById('freqConfig');
   var elFreqDaily  = document.getElementById('freqDaily');
   var elFreqWeekly = document.getElementById('freqWeekly');
@@ -787,6 +846,17 @@
   var elSaveTime   = document.getElementById('saveTime');
   var elQuickClear = document.getElementById('quickClear');
 
+  var elPageMask   = document.getElementById('pageMask');
+  var elPageSheet  = document.getElementById('pageSheet');
+  var elPageSheetTitle = document.getElementById('pageSheetTitle');
+  var elPageSheetClose = document.getElementById('pageSheetClose');
+  var elPageBig    = document.getElementById('pageBig');
+  var elPageInput  = document.getElementById('pageInput');
+  var elPageHint   = document.getElementById('pageHint');
+  var elPageStatus = document.getElementById('pageStatus');
+  var elSavePage   = document.getElementById('savePage');
+  var elPageClear  = document.getElementById('pageClear');
+
   var elDayMask    = document.getElementById('dayMask');
   var elDaySheet   = document.getElementById('daySheet');
   var elDayTitle   = document.getElementById('dayTitle');
@@ -795,7 +865,9 @@
   var elDayActions = document.getElementById('dayActions');
   var elDayTimeWrap = document.getElementById('dayTimeWrap');
   var elDayTimeBig  = document.getElementById('dayTimeBig');
-  var elDayClear    = document.getElementById('dayClear');
+  var elDayUnit     = document.getElementById('dayUnit');
+  var elDayQuickTime = document.getElementById('dayQuickTime');
+  var elDayQuickPage = document.getElementById('dayQuickPage');
 
   var elWallTabs   = document.getElementById('wallTabs');
   var elWallScroll = document.getElementById('wallScroll');
@@ -843,6 +915,10 @@
       if (h.makeup && h.makeup[key]) return true;
       return minutesOf(h, key) >= h.target;
     }
+    if (h.type === 'page') {
+      if (h.makeup && h.makeup[key]) return true;
+      return readPagesOf(h, key) > pageTarget(h);
+    }
     return !!(h.done && h.done[key]);
   }
 
@@ -854,6 +930,80 @@
     var len = h.freq.work + h.freq.rest;
     var pos = diff % len;
     return { pos: pos + 1, work: h.freq.work, rest: h.freq.rest, len: len, isRest: pos >= h.freq.work };
+  }
+
+  /* ---------- 按页看书 ----------
+     每天记的是「读到第几页」。
+     今天读的页数 = 今天记的页 - 上一次记的页（没记的日子页数接着上一天，阅读量算 0）。
+     今天记的页比上一次还少，当成换新书，从第 0 页读起。
+     读的页数 > target 算当天打卡；> bonus 能把前天 / 昨天补卡。 */
+  function pageTarget(h){ return clampNum(h.target || 20, 1, 99999); }
+  function pageBonus(h){ return clampNum(h.bonus || 50, 1, 99999); }
+
+  function pageRecorded(h, key){
+    return (h.pages && h.pages[key]) ? h.pages[key] : 0;
+  }
+
+  function pageKeys(h){
+    var keys = [];
+    if (h.pages) for (var k in h.pages) if (h.pages[k] > 0) keys.push(k);
+    keys.sort();
+    return keys;
+  }
+
+  /* 上一次（不晚于那天的最近一天）记到的页数 */
+  function pageBase(h, key){
+    var keys = pageKeys(h);
+    var base = 0;
+    for (var i = 0; i < keys.length; i++) {
+      if (keys[i] < key) base = h.pages[keys[i]];
+      else break;
+    }
+    return base;
+  }
+
+  /* 那天读了多少页 */
+  function readPagesOf(h, key){
+    var p = pageRecorded(h, key);
+    if (p <= 0) return 0;
+    var base = pageBase(h, key);
+    if (p < base) return p;
+    return p - base;
+  }
+
+  /* 那天是不是换新书了 */
+  function isNewBook(h, key){
+    var p = pageRecorded(h, key);
+    if (p <= 0) return false;
+    return p < pageBase(h, key);
+  }
+
+  /* 最近一次记到的页数 */
+  function lastPage(h){
+    var keys = pageKeys(h);
+    if (!keys.length) return 0;
+    return h.pages[keys[keys.length - 1]];
+  }
+
+  function weekAveragePages(h){
+    var ws = startOfWeek(today);
+    var days = diffDays(ws, today) + 1;
+    var sum = 0;
+    for (var i = 0; i < days; i++) sum += readPagesOf(h, dayKey(addDays(ws, i)));
+    return days > 0 ? Math.round(sum / days) : 0;
+  }
+
+  function totalAveragePages(h){
+    var startD = parseKey(state.startedAt || todayKey);
+    var days = diffDays(startD, today) + 1;
+    if (days <= 0) days = 1;
+    var sum = 0;
+    var cursor = startD;
+    for (var i = 0; i < days; i++) {
+      sum += readPagesOf(h, dayKey(cursor));
+      cursor = addDays(cursor, 1);
+    }
+    return Math.round(sum / days);
   }
 
   /* ---------- 连续 / 统计 ---------- */
@@ -877,6 +1027,11 @@
     var best = 0, cur = 0, prev = null;
     for (var i = 0; i < keys.length; i++) {
       var d = parseKey(keys[i]);
+      if (!isSuccess(h, keys[i])) {
+        cur = 0;
+        prev = d;
+        continue;
+      }
       if (prev && diffDays(prev, d) === 1) cur++;
       else cur = 1;
       if (cur > best) best = cur;
@@ -890,6 +1045,7 @@
     var k;
     if (h.done) for (k in h.done) if (h.done[k]) set[k] = 1;
     if (h.log) for (k in h.log) if (h.log[k]) set[k] = 1;
+    if (h.pages) for (k in h.pages) if (h.pages[k] > 0) set[k] = 1;
     if (h.makeup) for (k in h.makeup) if (h.makeup[k]) set[k] = 1;
     if (h.rest) for (k in h.rest) if (h.rest[k]) set[k] = 1;
     return Object.keys(set);
@@ -957,6 +1113,24 @@
       if (s > 0) parts.push('连续 ' + s + ' 天');
       return parts.join(' · ');
     }
+    if (h.type === 'page') {
+      var p = pageRecorded(h, todayKey);
+      var rp = readPagesOf(h, todayKey);
+      var pparts = [];
+      var tgt = pageTarget(h);
+      if (p > 0) {
+        if (rp > tgt) pparts.push('今天 ' + rp + ' 页 · 达标');
+        else if (rp > 0) pparts.push('今天 ' + rp + ' 页 · 还差 ' + (tgt + 1 - rp) + ' 页');
+        else pparts.push('还停在第 ' + p + ' 页');
+        if (isNewBook(h, todayKey)) pparts.push('换新书了');
+      } else {
+        var lp = lastPage(h);
+        pparts.push(lp > 0 ? '今天还没记 · 上次到第 ' + lp + ' 页' : '今天还没记');
+      }
+      var pst = streakOf(h);
+      if (pst > 0) pparts.push('连续 ' + pst + ' 天');
+      return pparts.join(' · ');
+    }
     if (h.freq.type === 'weekly') {
       var goal = h.freq.times;
       var n = weekDoneCount(h, startOfWeek(today));
@@ -995,20 +1169,41 @@
            + (m > 0 ? m : '—')
            + '<small>分</small></span>';
     }
+    if (h.type === 'page') {
+      var rp = readPagesOf(h, todayKey);
+      return '<span class="time-badge' + (done ? ' on' : '') + '">'
+           + (rp > 0 ? rp : '—')
+           + '<small>页</small></span>';
+    }
     return '<span class="check">' + TICK_ICON + '</span>';
   }
 
   function makeupCandidates(h){
-    if (h.type !== 'time') return [];
-    if (minutesOf(h, todayKey) < h.bonus) return [];
     var out = [];
-    for (var off = 1; off <= 2; off++) {
-      var k = dayKey(addDays(today, -off));
-      if (h.makeup[k]) continue;
-      var m = minutesOf(h, k);
-      if (m > 0 && m < h.target) out.push(k);
+    var k;
+    if (h.type === 'time') {
+      if (minutesOf(h, todayKey) < h.bonus) return [];
+      for (var off = 1; off <= 2; off++) {
+        k = dayKey(addDays(today, -off));
+        if (h.makeup[k]) continue;
+        var m = minutesOf(h, k);
+        if (m > 0 && m < h.target) out.push(k);
+      }
+      return out;
     }
-    return out;
+    if (h.type === 'page') {
+      if (readPagesOf(h, todayKey) <= pageBonus(h)) return [];
+      var startK = h.createdAt || state.startedAt;
+      for (var off2 = 1; off2 <= 2; off2++) {
+        k = dayKey(addDays(today, -off2));
+        if (k < startK) continue;
+        if (h.makeup && h.makeup[k]) continue;
+        if (isSuccess(h, k)) continue;
+        out.push(k);
+      }
+      return out;
+    }
+    return [];
   }
 
   function renderHabits(){
@@ -1032,18 +1227,21 @@
             + habitRight(h, done, rest)
             + '</div>';
 
-      var cands = makeupCandidates(h);
-      if (cands.length) {
-        var btnHtml = '';
-        for (var c = 0; c < cands.length; c++) {
-          btnHtml += '<button class="makeup-btn" type="button" data-id="' + escapeHtml(h.id) + '"'
-                   + ' data-day="' + cands[c] + '">补 ' + shortDay(cands[c]) + '</button>';
+        var cands = makeupCandidates(h);
+        if (cands.length) {
+          var btnHtml = '';
+          for (var c = 0; c < cands.length; c++) {
+            btnHtml += '<button class="makeup-btn" type="button" data-id="' + escapeHtml(h.id) + '"'
+                     + ' data-day="' + cands[c] + '">补 ' + shortDay(cands[c]) + '</button>';
+          }
+          var makeupTip = h.type === 'page'
+            ? '今天读得多，可以补之前漏的：'
+            : '今天超额了，可以补之前没达标的：';
+          html += '<div class="makeup" data-id="' + escapeHtml(h.id) + '">'
+                + '<span>' + makeupTip + '</span>'
+                + '<span class="makeup-btns">' + btnHtml + '</span>'
+                + '</div>';
         }
-        html += '<div class="makeup" data-id="' + escapeHtml(h.id) + '">'
-              + '<span>今天超额了，可以补之前没达标的：</span>'
-              + '<span class="makeup-btns">' + btnHtml + '</span>'
-              + '</div>';
-      }
     }
     elList.innerHTML = html;
   }
@@ -1104,8 +1302,13 @@
   function doMakeup(id, key){
     if (dayRolled()) return;
     var h = findHabit(id);
-    if (!h || h.type !== 'time') return;
+    if (!h || (h.type !== 'time' && h.type !== 'page')) return;
+    if (!h.makeup) h.makeup = {};
     if (h.makeup[key]) return;
+    var cands = makeupCandidates(h);
+    var ok = false;
+    for (var i = 0; i < cands.length; i++) if (cands[i] === key) ok = true;
+    if (!ok) return;
     h.makeup[key] = true;
     save();
     renderHabits();
@@ -1154,6 +1357,10 @@
         if (h.makeup && h.makeup[k]) cls = 'makeup';
         else if (minutesOf(h, k) >= h.target) cls = 'ok';
         else if (minutesOf(h, k) > 0) cls = 'part';
+      } else if (h.type === 'page') {
+        if (h.makeup && h.makeup[k]) cls = 'makeup';
+        else if (readPagesOf(h, k) > pageTarget(h)) cls = 'ok';
+        else if (readPagesOf(h, k) > 0) cls = 'part';
       } else {
         if (h.done && h.done[k]) cls = 'ok';
       }
@@ -1173,6 +1380,18 @@
       html += '<div class="stat-line"><span>今天</span><b>' + minutesOf(h, todayKey) + ' 分钟' + (isSuccess(h, todayKey) ? ' · 达标' : '') + '</b></div>';
       html += '<div class="stat-line"><span>本周平均</span><b>' + weekAverage(h) + ' 分钟</b></div>';
       html += '<div class="stat-line"><span>总平均（每天算）</span><b>' + totalAverage(h) + ' 分钟</b></div>';
+    }
+    if (h.type === 'page') {
+      var rp = readPagesOf(h, todayKey);
+      var lp = lastPage(h);
+      if (rp > 0) html += '<div class="stat-line"><span>今天</span><b>' + rp + ' 页' + (isSuccess(h, todayKey) ? ' · 达标' : '') + '</b></div>';
+      else if (h.makeup && h.makeup[todayKey]) html += '<div class="stat-line"><span>今天</span><b>补卡了</b></div>';
+      else html += '<div class="stat-line"><span>今天</span><b>还没记</b></div>';
+      if (lp > 0) html += '<div class="stat-line"><span>现在读到</span><b>第 ' + lp + ' 页</b></div>';
+      html += '<div class="stat-line"><span>本周平均</span><b>' + weekAveragePages(h) + ' 页</b></div>';
+      html += '<div class="stat-line"><span>总平均（每天算）</span><b>' + totalAveragePages(h) + ' 页</b></div>';
+      html += '<div class="stat-line"><span>达标线</span><b>读超过 ' + pageTarget(h) + ' 页</b></div>';
+      html += '<div class="stat-line"><span>补卡门槛</span><b>读超过 ' + pageBonus(h) + ' 页</b></div>';
     }
     html += '<div class="stat-line"><span>当前连续</span><b>' + streakOf(h) + ' 天</b></div>';
     html += '<div class="stat-line"><span>最长连续</span><b>' + longestStreak(h) + ' 天</b></div>';
@@ -1202,15 +1421,37 @@
     else if (h.type === 'time') {
       var m = minutesOf(h, key);
       status = m > 0 ? '记录 ' + m + ' 分钟' + (m >= h.target ? '（达标）' : '（没到 ' + h.target + ' 分钟）') : '这天没记录';
+    } else if (h.type === 'page') {
+      var dp = pageRecorded(h, key);
+      var drp = readPagesOf(h, key);
+      if (h.makeup && h.makeup[key]) {
+        status = dp > 0 ? '补卡 · 这天记的读到第 ' + dp + ' 页' : '这天补卡了（没记页数）';
+      } else if (dp > 0) {
+        status = '读到第 ' + dp + ' 页 · 这天读了 ' + drp + ' 页'
+               + (drp > pageTarget(h) ? '（达标）' : '（没超过 ' + pageTarget(h) + ' 页）')
+               + (isNewBook(h, key) ? ' · 换新书' : '');
+      } else {
+        status = '这天没记（页数按上一天的算）';
+      }
     } else {
       status = done ? '这天打了卡' : '这天没打卡';
     }
     elDayStatus.textContent = status;
 
     var dayTimeBig = document.getElementById('dayTimeBig');
-    if (h.type === 'time') {
+    if (h.type === 'time' || h.type === 'page') {
       elDayTimeWrap.hidden = false;
-      dayTimeBig.textContent = minutesOf(h, key);
+      if (h.type === 'time') {
+        elDayUnit.textContent = '分钟';
+        elDayQuickTime.hidden = false;
+        elDayQuickPage.hidden = true;
+        dayTimeBig.textContent = minutesOf(h, key);
+      } else {
+        elDayUnit.textContent = '页';
+        elDayQuickTime.hidden = true;
+        elDayQuickPage.hidden = false;
+        dayTimeBig.textContent = pageRecorded(h, key) > 0 ? pageRecorded(h, key) : pageBase(h, key);
+      }
     } else {
       elDayTimeWrap.hidden = true;
     }
@@ -1218,12 +1459,15 @@
     var actions = '';
     if (h.type === 'check') {
       actions += '<button class="btn-soft' + (done && !rest ? ' on' : '') + '" type="button" id="dayToggle">' + (done && !rest ? '取消打卡' : '补打卡') + '</button>';
-    } else {
+    } else if (h.type === 'time') {
       actions += '<button class="btn-soft" type="button" id="daySaveTime">保存分钟数</button>';
+    } else {
+      actions += '<button class="btn-soft" type="button" id="daySavePage">保存页数</button>';
+      if (pageRecorded(h, key) > 0) actions += '<button class="btn-soft" type="button" id="dayClearPage">清掉这天的记页</button>';
     }
     actions += '<button class="btn-soft' + (rest ? ' on' : '') + '" type="button" id="dayToggleRest">' + (rest ? '取消休息日' : '设为休息日') + '</button>';
 
-    var canMakeup = h.type === 'time' && (h.makeup && h.makeup[key]);
+    var canMakeup = (h.type === 'time' || h.type === 'page') && (h.makeup && h.makeup[key]);
     if (canMakeup) {
       actions += '<button class="btn-soft" type="button" id="dayUndoMakeup">取消补卡标记</button>';
     }
@@ -1250,6 +1494,22 @@
       st.addEventListener('click', function(){
         var v = clampNum(document.getElementById('dayTimeBig').textContent, 0, 1440);
         if (v > 0) h.log[key] = v; else delete h.log[key];
+        save(); refreshAll(); openDaySheet(h, key);
+      });
+    }
+    var sp = document.getElementById('daySavePage');
+    if (sp) {
+      sp.addEventListener('click', function(){
+        var v = clampNum(document.getElementById('dayTimeBig').textContent, 0, 99999);
+        if (!h.pages) h.pages = {};
+        if (v > 0) h.pages[key] = v; else delete h.pages[key];
+        save(); refreshAll(); openDaySheet(h, key);
+      });
+    }
+    var cpg = document.getElementById('dayClearPage');
+    if (cpg) {
+      cpg.addEventListener('click', function(){
+        if (h.pages) delete h.pages[key];
         save(); refreshAll(); openDaySheet(h, key);
       });
     }
@@ -1297,6 +1557,7 @@
     var habit = findHabit(card2.getAttribute('data-id'));
     if (!habit) return;
     if (habit.type === 'time') openTimeSheet(habit);
+    else if (habit.type === 'page') openPageSheet(habit);
     else toggleHabit(card2);
   });
 
@@ -1305,6 +1566,9 @@
     var card = e.target.closest ? e.target.closest('.habit') : null;
     if (!card) return;
     e.preventDefault();
+    var habit = findHabit(card.getAttribute('data-id'));
+    if (habit && habit.type === 'page') { openPageSheet(habit); return; }
+    if (habit && habit.type === 'time') { openTimeSheet(habit); return; }
     toggleHabit(card);
   });
 
@@ -1348,8 +1612,10 @@
   function renderTypeUI(){
     elTypeCheck.classList.toggle('on', formType === 'check');
     elTypeTime.classList.toggle('on', formType === 'time');
+    elTypePage.classList.toggle('on', formType === 'page');
     elTimeConfig.hidden = formType !== 'time';
-    elFreqConfig.hidden = formType === 'time';
+    elPageConfig.hidden = formType !== 'page';
+    elFreqConfig.hidden = formType !== 'check';
   }
 
   function renderFreqUI(){
@@ -1376,6 +1642,8 @@
     elNameInput.value = h ? h.name : '';
     elTargetInput.value = h && h.type === 'time' ? h.target : 30;
     elBonusInput.value = h && h.type === 'time' ? h.bonus : 60;
+    elPageTargetInput.value = h && h.type === 'page' ? h.target : 20;
+    elPageBonusInput.value = h && h.type === 'page' ? h.bonus : 50;
     elDeleteHabit.hidden = !h;
 
     renderIconRow();
@@ -1405,6 +1673,7 @@
 
   elTypeCheck.addEventListener('click', function(){ formType = 'check'; renderTypeUI(); });
   elTypeTime.addEventListener('click', function(){ formType = 'time'; renderTypeUI(); });
+  elTypePage.addEventListener('click', function(){ formType = 'page'; renderTypeUI(); });
 
   elFreqDaily.addEventListener('click', function(){ formFreq = 'daily'; renderFreqUI(); });
   elFreqWeekly.addEventListener('click', function(){ formFreq = 'weekly'; renderFreqUI(); });
@@ -1440,6 +1709,14 @@
       h.freq = { type:'daily' };
       if (!h.log) h.log = {};
       if (!h.makeup) h.makeup = {};
+    } else if (formType === 'page') {
+      h.target = clampNum(elPageTargetInput.value, 1, 99999);
+      h.bonus = clampNum(elPageBonusInput.value, 1, 99999);
+      if (h.bonus <= h.target) h.bonus = h.target + 10;
+      h.freq = { type:'daily' };
+      if (!h.pages) h.pages = {};
+      if (!h.makeup) h.makeup = {};
+      if (!h.createdAt) h.createdAt = todayKey;
     } else {
       if (formFreq === 'weekly') h.freq = { type:'weekly', times: formTimes };
       else if (formFreq === 'cycle') {
@@ -1513,11 +1790,12 @@
   elTimeSheetClose.addEventListener('click', closeTimeSheet);
   elTimeMask.addEventListener('click', closeTimeSheet);
 
-  var quickBtns = document.querySelectorAll('.quick-btn');
+  var quickBtns = elTimeSheet.querySelectorAll('.quick-btn');
   for (var qb = 0; qb < quickBtns.length; qb++) {
     quickBtns[qb].addEventListener('click', function(){
       var add = parseInt(this.getAttribute('data-add'), 10) || 0;
-      timeMinutes = Math.max(0, Math.min(1440, timeMinutes + add));
+      if (add === 0) timeMinutes = 0;
+      else timeMinutes = Math.max(0, Math.min(1440, timeMinutes + add));
       syncTimeUI();
       refreshHint();
     });
@@ -1540,19 +1818,103 @@
     closeTimeSheet();
   });
 
+  /* ---------- 事件：记页数 ---------- */
+  var pageEditingId = null;
+  var pageValue = 0;
+
+  function syncPageUI(){
+    elPageBig.textContent = pageValue;
+    elPageInput.value = pageValue > 0 ? pageValue : '';
+    refreshPageStatus();
+  }
+
+  function refreshPageStatus(){
+    var h = findHabit(pageEditingId);
+    if (!h) return;
+    var base = pageBase(h, todayKey);
+    elPageHint.textContent = base > 0 ? '上次记到第 ' + base + ' 页，今天读到第几页了？' : '记一下今天读到第几页';
+    var tgt = pageTarget(h);
+    var bns = pageBonus(h);
+    var txt = '';
+    if (pageValue <= 0) {
+      txt = '每天读超过 ' + tgt + ' 页算打卡，超过 ' + bns + ' 页能补昨天 / 前天';
+    } else if (pageValue < base) {
+      txt = '比上次少，当成换新书：从第 0 页算，今天读了 ' + pageValue + ' 页'
+          + (pageValue > tgt ? '，达标' : '，还差 ' + Math.max(0, tgt + 1 - pageValue) + ' 页');
+    } else {
+      var read = pageValue - base;
+      if (read <= 0) txt = '还停在原来那页，今天算 0 页';
+      else txt = '今天读了 ' + read + ' 页'
+               + (read > tgt ? '，达标' : '，还差 ' + (tgt + 1 - read) + ' 页')
+               + (read > bns ? '，能补昨天 / 前天' : '');
+    }
+    elPageStatus.textContent = txt;
+  }
+
+  function openPageSheet(h){
+    pageEditingId = h.id;
+    var base = pageBase(h, todayKey);
+    pageValue = pageRecorded(h, todayKey) > 0 ? pageRecorded(h, todayKey) : base;
+    elPageSheetTitle.textContent = '记「' + h.name + '」';
+    syncPageUI();
+    elPageMask.classList.add('show');
+    elPageSheet.classList.add('show');
+  }
+
+  function closePageSheet(){
+    elPageMask.classList.remove('show');
+    elPageSheet.classList.remove('show');
+    pageEditingId = null;
+  }
+
+  elPageSheetClose.addEventListener('click', closePageSheet);
+  elPageMask.addEventListener('click', closePageSheet);
+
+  var pageQuickBtns = document.querySelectorAll('[data-padd]');
+  for (var pq = 0; pq < pageQuickBtns.length; pq++) {
+    pageQuickBtns[pq].addEventListener('click', function(){
+      var add = parseInt(this.getAttribute('data-padd'), 10) || 0;
+      if (add === 0) pageValue = 0;
+      else pageValue = Math.max(0, Math.min(99999, pageValue + add));
+      syncPageUI();
+    });
+  }
+
+  elPageInput.addEventListener('input', function(){
+    pageValue = clampNum(elPageInput.value, 0, 99999);
+    elPageBig.textContent = pageValue;
+    refreshPageStatus();
+  });
+
+  elSavePage.addEventListener('click', function(){
+    if (!pageEditingId) return;
+    var h = findHabit(pageEditingId);
+    if (!h) return;
+    if (!h.pages) h.pages = {};
+    var base = pageBase(h, todayKey);
+    if (pageValue > 0 && pageValue !== base) h.pages[todayKey] = pageValue;
+    else delete h.pages[todayKey];
+    save();
+    refreshAll();
+    closePageSheet();
+  });
+
   /* ---------- 事件：某一天 ---------- */
   var dayQuickBtns = document.querySelectorAll('[data-dadd]');
   for (var db = 0; db < dayQuickBtns.length; db++) {
     dayQuickBtns[db].addEventListener('click', function(){
       var add = parseInt(this.getAttribute('data-dadd'), 10) || 0;
       var big = document.getElementById('dayTimeBig');
-      var v = clampNum(big.textContent, 0, 1440) + add;
-      big.textContent = Math.max(0, Math.min(1440, v));
+      var v = clampNum(big.textContent, 0, 99999) + add;
+      big.textContent = Math.max(0, Math.min(99999, v));
     });
   }
-  elDayClear.addEventListener('click', function(){
-    document.getElementById('dayTimeBig').textContent = 0;
-  });
+  var dayClearBtns = elDaySheet.querySelectorAll('.day-clear');
+  for (var dc = 0; dc < dayClearBtns.length; dc++) {
+    dayClearBtns[dc].addEventListener('click', function(){
+      document.getElementById('dayTimeBig').textContent = 0;
+    });
+  }
   elDayClose.addEventListener('click', closeDaySheet);
   elDayMask.addEventListener('click', closeDaySheet);
 
@@ -1599,14 +1961,7 @@
         state = obj;
         /* 再走一遍补字段 */
         for (var i = 0; i < state.habits.length; i++) {
-          var h = state.habits[i];
-          if (!h.done) h.done = {};
-          if (!h.rest) h.rest = {};
-          if (!h.type) h.type = 'check';
-          if (h.type === 'time') {
-            if (!h.log) h.log = {};
-            if (!h.makeup) h.makeup = {};
-          }
+          patchHabit(state.habits[i]);
         }
         if (!state.startedAt) state.startedAt = todayKey;
         save();
