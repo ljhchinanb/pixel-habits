@@ -1096,13 +1096,14 @@
       .catch(fail);
   }
 
+  function cloudRestoreDone(msg){
+    cloudToast(cloudCfg().token ? msg : msg + '，记得再把令牌粘一次');
+  }
+
   function cloudRestoreManual(){
     cloudFetch(function(obj){
-      var hasRecord = false;
-      for (var i = 0; i < obj.habits.length; i++) if (habitHasRecords(obj.habits[i])) hasRecord = true;
-      if (!hasRecord) { cloudToast('云端的备份还是空的'); return; }
       if (!window.confirm('用云端的备份覆盖现在手机上的记录，确定吗？')) return;
-      if (cloudApply(obj)) cloudToast('云端记录回来了');
+      if (cloudApply(obj)) cloudRestoreDone('云端记录回来了');
     }, function(){
       cloudToast('恢复失败：没连上云端');
     });
@@ -1116,10 +1117,7 @@
       if (any) return;
     }
     cloudFetch(function(obj){
-      var hasRecord = false;
-      for (var j = 0; j < obj.habits.length; j++) if (habitHasRecords(obj.habits[j])) hasRecord = true;
-      if (!hasRecord) return;
-      if (cloudApply(obj)) cloudToast('云端有备份，已自动恢复');
+      if (cloudApply(obj)) cloudRestoreDone('云端有备份，已自动恢复');
     }, function(){});
   }
 
