@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#FBF6EA">
+<meta name="theme-color" content="#F2FFEF">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="像素习惯">
-<link rel="apple-touch-icon" href="icon-180.png?v=2">
-<link rel="icon" type="image/png" href="favicon.png?v=2">
+<link rel="apple-touch-icon" href="icon-180.png?v=3">
+<link rel="icon" type="image/png" href="favicon.png?v=3">
 <title>像素习惯</title>
 <style>
   :root{
@@ -472,6 +472,106 @@
     .check.tick{animation:none;}
     .sheet{transition:none;}
   }
+
+  /* ==========================================================
+     换肤：跟着新的柴犬图标走 —— 薄荷奶油底、圆角、深绿描边
+     下面这层整块盖在上面，颜色和圆角都以后面的为准
+     ========================================================== */
+  :root{
+    --cream:#F2FFEF;        /* 页面底：淡薄荷 */
+    --cream-deep:#E3F3DC;
+    --white:#FFFDF5;        /* 卡片：奶油白 */
+    --mint:#BFDCAE;         /* 浅鼠尾草 */
+    --mint-soft:#E2F2D8;
+    --mint-deep:#5C8E67;    /* 主绿 */
+    --ink:#142E23;          /* 深墨绿描边 */
+    --ink-soft:#6F8C78;
+    --peach:#D9A98B;        /* 灰粉 */
+    --sand:#F4E8BE;
+    --danger:#B4695C;
+  }
+
+  body{
+    background-color:#F2FFEF;
+    background-image:
+      linear-gradient(rgba(114,161,102,.10) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(114,161,102,.10) 1px,transparent 1px);
+    background-size:18px 18px;
+    color:var(--ink);
+  }
+
+  .brand-mark{
+    width:46px;height:46px;
+    border-radius:15px;
+    background:var(--white);
+    border:3px solid var(--ink);
+    box-shadow:3px 3px 0 rgba(20,46,35,.14);
+    overflow:hidden;
+    display:grid;place-items:center;
+  }
+  .brand-mark img{width:100%;height:100%;object-fit:cover;display:block;}
+
+  .date-card,.today-bar,.habit,.wall-frame,.stats,.empty{
+    border-radius:18px;
+    box-shadow:5px 5px 0 rgba(20,46,35,.13);
+  }
+  .date-card{padding:16px 18px;}
+  .date-deco i{border-radius:2px;}
+  .date-deco i:nth-child(1){background:var(--mint-deep);}
+  .date-deco i:nth-child(2){background:var(--peach);}
+  .date-deco i:nth-child(3){background:var(--sand);}
+  .today-bar{background:var(--mint-soft);}
+  .cell{border-radius:4px;background:var(--white);border-color:var(--ink);}
+  .cell.on{background:var(--mint-deep);}
+
+  .habit.done{background:#E7F5DE;}
+  .habit.is-rest{background:#FAF4E2;}
+  .habit-icon{border-radius:12px;background:var(--white);}
+  .habit-edit{border-radius:10px;background:var(--white);}
+  .check{border-radius:11px;background:var(--white);}
+  .habit.done .check{background:var(--mint-deep);border-color:var(--ink);}
+  .time-badge{border-radius:11px;background:var(--white);}
+  .habit.done .time-badge{background:var(--mint-deep);border-color:var(--ink);color:var(--white);}
+  .add-btn{border-radius:10px;box-shadow:3px 3px 0 rgba(20,46,35,.12);}
+  .makeup{border-radius:14px;background:#F7E4D8;box-shadow:none;margin:-6px 0 16px;}
+  .makeup-btn{border-radius:9px;}
+
+  .wall-tab{border-radius:9px;border-color:#B4C9AC;background:var(--white);}
+  .wall-tab.on{background:var(--mint-soft);border-color:var(--mint-deep);color:var(--mint-deep);}
+  .wcell{border-radius:3px;border-color:#CBDCC4;}
+  .wcell.ok{background:var(--mint-deep);border-color:var(--mint-deep);}
+  .wcell.part{background:var(--mint-soft);border-color:var(--mint-deep);}
+  .wcell.rest{background:var(--sand);border-color:#D8C58A;}
+  .wcell.makeup{background:var(--peach);border-color:#C29B7D;}
+  .wall-legend i{border-radius:3px;}
+
+  .ghost-btn{border-radius:14px;box-shadow:3px 3px 0 rgba(20,46,35,.12);background:var(--white);}
+
+  .mask{background:rgba(20,46,35,.42);}
+  .sheet{
+    background:#FBFCEF;
+    border-radius:26px 26px 0 0;
+    border-top:3px solid var(--ink);
+  }
+  .sheet-close{border-radius:10px;background:var(--white);}
+  .field-input{border-radius:12px;background:var(--white);box-shadow:3px 3px 0 rgba(20,46,35,.10);}
+  .icon-btn{border-radius:11px;background:var(--white);}
+  .icon-btn.on{background:var(--mint-soft);border-color:var(--mint-deep);color:var(--mint-deep);}
+  .freq-btn,.type-btn{border-radius:11px;background:var(--white);box-shadow:3px 3px 0 rgba(20,46,35,.10);}
+  .freq-btn.on,.type-btn.on{background:var(--mint-soft);border-color:var(--mint-deep);color:var(--mint-deep);}
+  .times-btn{border-radius:9px;background:var(--white);}
+  .num-input{border-radius:11px;background:var(--white);box-shadow:3px 3px 0 rgba(20,46,35,.10);}
+  .btn-primary{border-radius:13px;background:var(--mint-deep);}
+  .btn-soft{border-radius:11px;background:var(--white);}
+  .btn-soft.on{background:var(--mint-soft);border-color:var(--mint-deep);color:var(--mint-deep);}
+  .btn-danger{border-radius:11px;background:var(--white);}
+  .quick-btn{border-radius:11px;background:var(--white);box-shadow:3px 3px 0 rgba(20,46,35,.10);}
+  .time-big{color:var(--mint-deep);}
+
+  .cloud-box{border-radius:16px;border-color:#A9C2A0;background:var(--white);}
+  .cloud-badge{border-radius:7px;}
+  #toast{border-radius:13px;background:var(--ink);}
+  .tip{line-height:2;}
 </style>
 </head>
 <body>
@@ -479,15 +579,7 @@
 
   <header class="top">
     <div class="brand">
-      <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 8 8" shape-rendering="crispEdges" fill="#2B473C">
-          <rect x="1" y="1" width="2" height="2"/>
-          <rect x="5" y="1" width="2" height="2"/>
-          <rect x="3" y="3" width="2" height="2"/>
-          <rect x="1" y="5" width="2" height="2"/>
-          <rect x="5" y="5" width="2" height="2"/>
-        </svg>
-      </span>
+      <span class="brand-mark" aria-hidden="true"><img src="brand.png?v=3" alt=""></span>
       <div>
         <h1>像素习惯</h1>
         <p class="tagline">一天一个小方块</p>
@@ -1447,7 +1539,7 @@
   function renderHabits(){
     var html = '';
     if (!state.habits.length) {
-      html = '<div class="empty">还没有习惯<br>点上面那个「＋ 新增」加一个</div>';
+      html = '<div class="empty"><img src="brand.png?v=3" alt="" style="width:64px;height:64px;border-radius:16px;display:block;margin:0 auto 10px;">还没有习惯<br>点上面那个「＋ 新增」加一个</div>';
     }
     for (var i = 0; i < state.habits.length; i++) {
       var h = state.habits[i];
