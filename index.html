@@ -437,6 +437,37 @@
   .day-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
   .day-actions .btn-soft{flex:1 1 40%;}
 
+  /* 云端自动备份 */
+  .cloud-box{
+    margin-top:16px;padding:12px 12px 6px;
+    border:3px dashed var(--ink-soft);
+    background:var(--white);
+  }
+  .cloud-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .cloud-title{font-size:13px;font-weight:800;letter-spacing:1px;}
+  .cloud-badge{
+    flex:0 0 auto;font-size:11px;font-weight:800;letter-spacing:.5px;
+    padding:2px 7px;border:2px solid var(--ink-soft);color:var(--ink-soft);
+  }
+  .cloud-badge.on{border-color:var(--mint-deep);color:var(--mint-deep);background:var(--mint-soft);}
+  .cloud-badge.err{border-color:var(--danger);color:var(--danger);background:#FBEDEA;}
+  .cloud-box .field-input{margin-top:10px;font-size:13px;padding:9px 10px;box-shadow:none;}
+  .cloud-box .sheet-actions{margin-top:10px;}
+  .cloud-box .sheet-actions .btn-soft{padding:9px 4px;font-size:12px;box-shadow:none;}
+  .cloud-box .hint{margin-top:8px;font-size:11px;}
+
+  #toast{
+    position:fixed;left:50%;bottom:26px;
+    transform:translate(-50%,16px);
+    z-index:40;max-width:88vw;
+    background:var(--ink);color:var(--white);
+    font-size:13px;font-weight:700;letter-spacing:.5px;
+    padding:10px 16px;
+    opacity:0;pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+  }
+  #toast.show{opacity:1;transform:translate(-50%,0);}
+
   @media (prefers-reduced-motion: reduce){
     .check.tick{animation:none;}
     .sheet{transition:none;}
@@ -671,7 +702,24 @@
   </div>
   <input type="file" id="importFile" accept=".json,application/json" style="display:none">
   <p class="hint" id="backupHint"></p>
+
+  <div class="cloud-box">
+    <div class="cloud-head">
+      <span class="cloud-title">云端自动备份</span>
+      <span class="cloud-badge" id="cloudBadge">未开启</span>
+    </div>
+    <p class="hint" style="text-align:left;margin:8px 0 0;">开一次就行：把下面的备份令牌粘贴进来。以后每次打勾都会自动传到你的 GitHub；换手机、删图标，打开网页会自动把记录找回来。</p>
+    <input class="field-input" id="cloudToken" type="password" placeholder="粘贴备份令牌" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="sheet-actions">
+      <button class="btn-soft" id="cloudSaveBtn" type="button">保存令牌</button>
+      <button class="btn-soft" id="cloudNowBtn" type="button">立即备份</button>
+      <button class="btn-soft" id="cloudRestoreBtn" type="button">从云端恢复</button>
+    </div>
+    <p class="hint" id="cloudStatus" style="text-align:left;"></p>
+  </div>
 </div>
+
+<div id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (function(){
@@ -679,6 +727,13 @@
 
   var STORAGE_KEY = 'pixel-habits-v1';
   var WEEKDAYS = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+
+  /* 云端自动备份：存在自己的一个私有 GitHub Gist 里 */
+  var CLOUD_GIST_ID = '07ba78e6551d38dc5a81427f963355cc';
+  var CLOUD_PAGE = 'https://gist.github.com/ljhchinanb/07ba78e6551d38dc5a81427f963355cc';
+  var CLOUD_KEY = 'pixel-habits-cloud-v1';
+  var CLOUD_FILE = 'pixel-habits-state.json';
+  var CLOUD_API = 'https://api.github.com';
 
   var ICONS = {
     book: '<svg viewBox="0 0 8 8" shape-rendering="crispEdges"><rect x="1" y="1" width="6" height="1"/><rect x="1" y="2" width="1" height="5"/><rect x="6" y="2" width="1" height="5"/><rect x="1" y="6" width="6" height="1"/><rect x="3" y="2" width="1" height="3"/><rect x="4" y="2" width="1" height="3"/></svg>',
@@ -739,9 +794,13 @@
   }
 
   var state = null;
+  var hadLocalData = false;
   try {
     var raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) state = JSON.parse(raw);
+    if (raw) {
+      state = JSON.parse(raw);
+      hadLocalData = !!(state && Array.isArray(state.habits));
+    }
   } catch (e) {
     state = null;
   }
@@ -787,10 +846,189 @@
 
   function save(){
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    cloudSchedule();
   }
 
   function genId(){
     return 'h' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+  }
+
+  /* ---------- 云端自动备份 ---------- */
+  var cloudTimer = null;
+  var cloudRetryTimer = null;
+  var cloudSending = false;
+
+  function cloudCfg(){
+    try {
+      var raw = localStorage.getItem(CLOUD_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return { token: '', lastAt: 0, status: '', lastError: '' };
+  }
+
+  function cloudSaveCfg(cfg){
+    try { localStorage.setItem(CLOUD_KEY, JSON.stringify(cfg)); } catch (e) {}
+  }
+
+  function cloudTimeText(ts){
+    if (!ts) return '';
+    var d = new Date(ts);
+    return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  function habitHasRecords(h){
+    var fields = ['done', 'log', 'pages', 'makeup', 'rest'];
+    for (var i = 0; i < fields.length; i++) {
+      var o = h[fields[i]];
+      if (!o) continue;
+      for (var k in o) { if (o[k]) return true; }
+    }
+    return false;
+  }
+
+  function cloudSchedule(){
+    if (!cloudCfg().token) return;
+    if (cloudTimer) clearTimeout(cloudTimer);
+    cloudTimer = setTimeout(function(){ cloudTimer = null; cloudPush(); }, 2500);
+  }
+
+  function cloudFlush(){
+    if (!cloudTimer) return;
+    clearTimeout(cloudTimer);
+    cloudTimer = null;
+    cloudPush();
+  }
+
+  function cloudPush(){
+    var cfg = cloudCfg();
+    if (!cfg.token || cloudSending) return;
+    cloudSending = true;
+    var fileObj = {};
+    fileObj[CLOUD_FILE] = { content: JSON.stringify(state) };
+    var payload = JSON.stringify({ files: fileObj });
+    fetch(CLOUD_API + '/gists/' + CLOUD_GIST_ID, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': 'Bearer ' + cfg.token,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: payload
+    }).then(function(r){
+      if (r.status === 401 || r.status === 403) {
+        var e = new Error('auth');
+        e.auth = true;
+        throw e;
+      }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function(){
+      cfg.lastAt = Date.now();
+      cfg.status = 'ok';
+      cfg.lastError = '';
+      cloudSaveCfg(cfg);
+      cloudSending = false;
+      cloudRenderStatus();
+    }).catch(function(err){
+      cfg.status = (err && err.auth) ? 'auth' : 'fail';
+      cfg.lastError = (err && err.message) || '';
+      cloudSaveCfg(cfg);
+      cloudSending = false;
+      cloudRenderStatus();
+      if (cloudRetryTimer) clearTimeout(cloudRetryTimer);
+      cloudRetryTimer = setTimeout(function(){ cloudRetryTimer = null; cloudPush(); }, 30000);
+    });
+  }
+
+  function cloudRenderStatus(){
+    var cfg = cloudCfg();
+    var badge = document.getElementById('cloudBadge');
+    var status = document.getElementById('cloudStatus');
+    var tokenInput = document.getElementById('cloudToken');
+    if (tokenInput && cfg.token) tokenInput.placeholder = '已存好令牌（要换就重新粘贴）';
+    if (!badge) return;
+    if (!cfg.token) {
+      badge.textContent = '未开启';
+      badge.className = 'cloud-badge';
+      if (status) status.textContent = '';
+      return;
+    }
+    if (cfg.status === 'auth') {
+      badge.textContent = '令牌失效';
+      badge.className = 'cloud-badge err';
+      if (status) status.textContent = '备份令牌不对了，重新粘贴一次就能接着用。';
+    } else if (cfg.status === 'fail') {
+      badge.textContent = '备份没连上';
+      badge.className = 'cloud-badge err';
+      if (status) status.textContent = '刚才没备份成功（' + (cfg.lastError || '网络') + '），会自己再试。';
+    } else {
+      badge.textContent = '已开启';
+      badge.className = 'cloud-badge on';
+      if (status) status.textContent = '上次备份：' + (cfg.lastAt ? cloudTimeText(cfg.lastAt) : '还没传过');
+    }
+  }
+
+  function cloudToast(msg){
+    var el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(function(){ el.classList.remove('show'); }, 2600);
+  }
+
+  function cloudApply(obj){
+    if (!obj || !Array.isArray(obj.habits) || !obj.habits.length) return false;
+    state = obj;
+    for (var i = 0; i < state.habits.length; i++) patchHabit(state.habits[i]);
+    if (!state.startedAt) state.startedAt = todayKey;
+    save();
+    renderDate();
+    refreshAll();
+    return true;
+  }
+
+  function cloudFetch(ok, fail){
+    fetch(CLOUD_API + '/gists/' + CLOUD_GIST_ID, { headers: { 'Accept': 'application/vnd.github+json' } })
+      .then(function(r){
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function(gist){
+        var f = gist.files && gist.files[CLOUD_FILE];
+        var content = f && f.content;
+        if (!content) throw new Error('empty');
+        var obj = JSON.parse(content);
+        if (!obj || !Array.isArray(obj.habits) || !obj.habits.length) throw new Error('empty');
+        ok(obj);
+      })
+      .catch(fail);
+  }
+
+  function cloudRestoreManual(){
+    cloudFetch(function(obj){
+      var hasRecord = false;
+      for (var i = 0; i < obj.habits.length; i++) if (habitHasRecords(obj.habits[i])) hasRecord = true;
+      if (!hasRecord) { cloudToast('云端的备份还是空的'); return; }
+      if (!window.confirm('用云端的备份覆盖现在手机上的记录，确定吗？')) return;
+      if (cloudApply(obj)) cloudToast('云端记录回来了');
+    }, function(){
+      cloudToast('恢复失败：没连上云端');
+    });
+  }
+
+  function cloudAutoRestore(){
+    if (hadLocalData) {
+      // 本地已经有数据：只有一条记录都没有时，才从云端捞一次
+      var any = false;
+      for (var i = 0; i < state.habits.length; i++) if (habitHasRecords(state.habits[i])) any = true;
+      if (any) return;
+    }
+    cloudFetch(function(obj){
+      var hasRecord = false;
+      for (var j = 0; j < obj.habits.length; j++) if (habitHasRecords(obj.habits[j])) hasRecord = true;
+      if (!hasRecord) return;
+      if (cloudApply(obj)) cloudToast('云端有备份，已自动恢复');
+    }, function(){});
   }
 
   /* ---------- 元素 ---------- */
@@ -1980,6 +2218,41 @@
   renderHabits();
   renderToday();
   renderWall();
+  cloudRenderStatus();
+  cloudAutoRestore();
+
+  /* ---------- 事件：云端备份 ---------- */
+  var elCloudToken = document.getElementById('cloudToken');
+  var elCloudSaveBtn = document.getElementById('cloudSaveBtn');
+  var elCloudNowBtn = document.getElementById('cloudNowBtn');
+  var elCloudRestoreBtn = document.getElementById('cloudRestoreBtn');
+
+  elCloudSaveBtn.addEventListener('click', function(){
+    var v = elCloudToken.value.trim();
+    if (!v) { cloudToast('先把令牌粘贴进来'); return; }
+    var cfg = cloudCfg();
+    cfg.token = v;
+    cfg.status = '';
+    cfg.lastError = '';
+    cloudSaveCfg(cfg);
+    elCloudToken.value = '';
+    cloudRenderStatus();
+    cloudPush();
+    cloudToast('云端自动备份开好了');
+  });
+
+  elCloudNowBtn.addEventListener('click', function(){
+    if (!cloudCfg().token) { cloudToast('还没开启云端备份'); return; }
+    cloudPush();
+    cloudToast('这就传一次');
+  });
+
+  elCloudRestoreBtn.addEventListener('click', cloudRestoreManual);
+
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'hidden') cloudFlush();
+  });
+  window.addEventListener('pagehide', cloudFlush);
 })();
 </script>
 </body>
